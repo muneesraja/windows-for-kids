@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Microsoft Windows – Class 4</title>
+<style>
+  :root{
+    --blue:#0078d4; --red:#f25022; --green:#7fba00; --yellow:#ffb900; --sky:#00a4ef;
+    --ink:#1b2440; --paper:#ffffff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#0b1630;font-family:"Chalkboard SE","Comic Sans MS","Comic Neue","Segoe UI Rounded","Trebuchet MS",sans-serif;color:var(--ink)}
+
+  .deck{position:relative;width:100vw;height:100vh;overflow:hidden;display:none}
+  .deck.on{display:block}
+  .slide{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:9vh 5vw 9vh;text-align:center;gap:2vh;
+    opacity:0;transform:translateX(40px) scale(.98);pointer-events:none;
+    transition:opacity .45s ease, transform .45s ease;
+  }
+  .slide.active{opacity:1;transform:none;pointer-events:auto}
+
+  /* backgrounds */
+  .bg-sky{background:linear-gradient(160deg,#e3f4ff 0%,#bfe6ff 60%,#9ad6ff 100%)}
+  .bg-sun{background:linear-gradient(160deg,#fff7d6 0%,#ffe48a 100%)}
+  .bg-mint{background:linear-gradient(160deg,#e8ffe0 0%,#c4f2b0 100%)}
+  .bg-peach{background:linear-gradient(160deg,#fff0ea 0%,#ffcdb8 100%)}
+  .bg-lilac{background:linear-gradient(160deg,#f3ecff 0%,#d9c8ff 100%)}
+  .bg-night{background:#0c0c0c;color:#d9d9d9}
+  .bg-night h2{color:#fff}
+  .bg-xp{background:linear-gradient(180deg,#7ec8ff 0%,#bfe8ff 55%,#8fd16b 56%,#4f9e2d 100%)}
+  .bg-bsod{background:#0a5fc4;color:#fff}
+  .bg-title{background:radial-gradient(circle at 30% 20%,#2b7fff 0%,#0b3d91 55%,#06205a 100%);color:#fff}
+  .bg-title.med{background:radial-gradient(circle at 30% 20%,#ffb02e 0%,#c25e00 55%,#6b2c00 100%)}
+  .bg-title.hard{background:radial-gradient(circle at 30% 20%,#ff4d6d 0%,#8f1030 55%,#3d0614 100%)}
+
+  h1{font-size:clamp(34px,6.2vw,82px);line-height:1.05}
+  h2{font-size:clamp(26px,4.2vw,56px);line-height:1.1}
+  .big{font-size:clamp(19px,2.5vw,34px);line-height:1.35}
+  .mid{font-size:clamp(16px,2vw,27px);line-height:1.4}
+  .small{font-size:clamp(14px,1.6vw,22px);line-height:1.45}
+  .huge-emoji{font-size:clamp(40px,7vw,96px);line-height:1}
+  .pill{display:inline-block;background:var(--blue);color:#fff;border-radius:999px;padding:.15em .8em;font-weight:700}
+  .year{display:inline-block;background:var(--ink);color:#fff;border-radius:16px;padding:.1em .6em;font-size:clamp(20px,2.8vw,38px)}
+  .bg-title .year{background:#fff;color:#0b3d91}
+  .row{display:flex;gap:3vw;align-items:center;justify-content:center;flex-wrap:wrap}
+  .split{display:flex;gap:3vw;align-items:center;justify-content:center;width:min(1300px,92vw)}
+  .split > .txt{flex:1;text-align:left}
+  .hl{background:linear-gradient(transparent 55%,#ffe066 55%);padding:0 .1em}
+  .bg-night .hl,.bg-bsod .hl{background:linear-gradient(transparent 55%,#3a6bd8 55%)}
+
+  ul.list{list-style:none;text-align:left;display:flex;flex-direction:column;gap:1.1vh}
+  ul.list li{background:rgba(255,255,255,.85);border-radius:14px;padding:.45em .8em;box-shadow:0 4px 10px rgba(0,0,0,.08)}
+  .bg-night ul.list li,.bg-bsod ul.list li{background:rgba(255,255,255,.12)}
+
+  .pic{background:#fff;padding:10px 10px 12px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.22);transform:rotate(-1.5deg);margin:0}
+  .pic:nth-child(2n){transform:rotate(1.5deg)}
+  .pic img{display:block;max-height:40vh;max-width:40vw;border-radius:8px;object-fit:contain;margin:auto}
+  .pic.tall img{max-height:44vh}
+  .pic.wide img{max-width:60vw;max-height:46vh}
+  .pic.side img{max-width:42vw;max-height:52vh}
+  .pic.sm img{max-height:30vh;max-width:28vw}
+  .pic figcaption{font-size:clamp(13px,1.5vw,21px);margin-top:8px;font-weight:700;color:var(--ink)}
+  .pic .fallback{display:none;font-size:80px;padding:30px}
+  .pic.broken img{display:none}.pic.broken .fallback{display:block}
+  .pixel{image-rendering:pixelated;width:min(56vw,680px)}
+
+  .winlogo{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:clamp(100px,14vw,180px);aspect-ratio:1;transform:perspective(500px) rotateY(-14deg);animation:float 3s ease-in-out infinite}
+  .winlogo span{border-radius:6px}
+  .winlogo span:nth-child(1){background:var(--red)}
+  .winlogo span:nth-child(2){background:var(--green)}
+  .winlogo span:nth-child(3){background:var(--sky)}
+  .winlogo span:nth-child(4){background:var(--yellow)}
+  @keyframes float{50%{transform:perspective(500px) rotateY(-14deg) translateY(-12px)}}
+  .badge{display:inline-block;background:#fff;color:var(--ink);border-radius:999px;padding:.2em 1em;font-size:clamp(16px,2vw,26px);font-weight:700}
+
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:2vw;width:min(1100px,90vw)}
+  .cards.c5{grid-template-columns:repeat(5,1fr);width:min(1300px,94vw)}
+  .card{color:var(--ink);background:#fff;border-radius:20px;padding:2.2vh 1vw;box-shadow:0 8px 20px rgba(0,0,0,.12)}
+  .card .huge-emoji{font-size:clamp(34px,4.6vw,64px)}
+  .card p{font-size:clamp(15px,1.9vw,26px);font-weight:700;margin-top:6px}
+  .card small{display:block;font-size:clamp(12px,1.3vw,18px);margin-top:6px;color:#445}
+
+  .compare{display:flex;gap:2vw;align-items:center;justify-content:center;flex-wrap:wrap}
+  .bubble{background:#fff;border-radius:22px;padding:1.4vh 2vw;box-shadow:0 8px 20px rgba(0,0,0,.12);font-size:clamp(17px,2.2vw,30px);font-weight:700}
+
+  /* layer diagram */
+  .stack{display:flex;flex-direction:column;gap:8px;width:min(720px,80vw)}
+  .stack div{border-radius:14px;padding:1.3vh 1.2vw;font-weight:700;font-size:clamp(16px,2vw,28px);color:#fff;display:flex;justify-content:space-between;gap:1em}
+  .stack div small{font-weight:400;opacity:.92;font-size:.72em;align-self:center;text-align:right}
+
+  /* tables */
+  table.t2{color:var(--ink);border-collapse:separate;border-spacing:0;width:min(1150px,92vw);background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.12);font-size:clamp(14px,1.7vw,23px);text-align:left}
+  table.t2 th{background:var(--ink);color:#fff;padding:.55em .8em}
+  table.t2 td{padding:.5em .8em;border-top:1px solid #e4e7ef}
+  table.t2 tr:nth-child(even) td{background:#f5f8ff}
+
+  /* timeline */
+  .timeline{display:flex;gap:1vw;align-items:flex-end;justify-content:center;width:min(1350px,95vw)}
+  .t{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+  .t img{width:100%;aspect-ratio:4/3;object-fit:cover;object-position:top left;border-radius:10px;border:4px solid #fff;box-shadow:0 6px 16px rgba(0,0,0,.2);background:#ddd}
+  .t b{font-size:clamp(12px,1.6vw,24px)}
+  .t .yr{background:var(--blue);color:#fff;border-radius:999px;padding:2px 10px;font-size:clamp(11px,1.3vw,20px)}
+  .t:nth-child(4n+1) .yr{background:var(--red)} .t:nth-child(4n+2) .yr{background:var(--green)}
+  .t:nth-child(4n+3) .yr{background:var(--yellow);color:var(--ink)}
+  .line{height:8px;width:min(1350px,95vw);border-radius:8px;background:linear-gradient(90deg,var(--red),var(--green),var(--sky),var(--yellow))}
+
+  /* families diagram */
+  .fam{display:grid;grid-template-columns:auto 1fr;gap:1.4vh 1.5vw;align-items:center;width:min(1150px,92vw);text-align:left}
+  .fam .lbl{font-weight:700;font-size:clamp(15px,1.8vw,24px)}
+  .chips{display:flex;gap:.6vw;align-items:center;flex-wrap:wrap}
+  .chip{background:#fff;border-radius:12px;padding:.35em .7em;font-weight:700;font-size:clamp(14px,1.7vw,23px);box-shadow:0 4px 10px rgba(0,0,0,.1)}
+  .chip.x{background:var(--blue);color:#fff}
+  .arrow{font-size:clamp(16px,2vw,28px)}
+
+  /* time slicing */
+  .slices{display:flex;width:min(1000px,88vw);height:7vh;border-radius:12px;overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,.15)}
+  .slices span{flex:1;display:flex;align-items:center;justify-content:center;font-size:clamp(18px,2.4vw,34px)}
+  .s1{background:#ffd166}.s2{background:#8ecae6}.s3{background:#b5e48c}.s4{background:#f4a3c4}
+
+  /* bits bars */
+  .bits{width:min(1000px,88vw);display:flex;flex-direction:column;gap:1.4vh;text-align:left}
+  .bar32,.bar64{height:5vh;border-radius:10px;display:flex;align-items:center;padding:0 1em;font-weight:700;color:#fff;font-size:clamp(14px,1.7vw,22px)}
+  .bar32{width:8%;background:var(--red);white-space:nowrap}
+  .bar64{width:100%;background:linear-gradient(90deg,var(--green),var(--sky))}
+
+  /* folder tree */
+  .tree{font-family:"Courier New",monospace;background:#fff;border-radius:16px;padding:1.6vh 2vw;text-align:left;font-size:clamp(15px,1.9vw,26px);line-height:1.55;box-shadow:0 8px 20px rgba(0,0,0,.12);white-space:pre}
+  .path{font-family:"Courier New",monospace;background:var(--ink);color:#9fe870;border-radius:10px;padding:.4em .9em;font-size:clamp(15px,1.9vw,26px)}
+
+  /* desktop mockup */
+  .mock{position:relative;width:min(760px,62vw);aspect-ratio:16/10;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#3a7bd5,#00d2ff);box-shadow:0 10px 30px rgba(0,0,0,.25);border:6px solid #222}
+  .mock .icons{position:absolute;left:3%;top:5%;display:flex;flex-direction:column;gap:6%;height:60%}
+  .mock .ic{width:46px;height:40px;background:rgba(255,255,255,.85);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px}
+  .mock .win{position:absolute;left:24%;top:12%;width:52%;height:58%;background:#fff;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,.3)}
+  .mock .win::before{content:"My Homework  —  ▢  ✕";display:block;background:#e8eef8;border-radius:10px 10px 0 0;padding:4px 10px;font-size:13px;text-align:right;font-family:system-ui}
+  .mock .tb{position:absolute;left:0;right:0;bottom:0;height:12%;background:rgba(20,20,30,.85);display:flex;align-items:center;justify-content:center;gap:12px}
+  .mock .tb span{width:26px;height:26px;border-radius:6px;background:#fff;opacity:.85}
+  .mock .tb .st{background:conic-gradient(var(--red) 0 25%,var(--green) 0 50%,var(--yellow) 0 75%,var(--sky) 0);opacity:1}
+  .mock .clock{position:absolute;right:3%;bottom:2.5%;color:#fff;font-family:system-ui;font-size:14px}
+  .num{position:absolute;width:34px;height:34px;border-radius:50%;background:var(--red);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:system-ui;font-size:18px;box-shadow:0 0 0 3px #fff}
+  .legend{display:flex;flex-direction:column;gap:1.2vh;text-align:left;font-size:clamp(16px,2vw,26px)}
+  .legend b{display:inline-flex;width:1.6em;height:1.6em;border-radius:50%;background:var(--red);color:#fff;align-items:center;justify-content:center;font-family:system-ui;margin-right:.4em;font-size:.8em}
+
+  kbd{display:inline-block;background:#fff;border:2px solid #c9cfdd;border-bottom-width:5px;border-radius:9px;padding:.1em .55em;font-family:system-ui,sans-serif;font-weight:700;font-size:.9em;color:var(--ink)}
+  .keys{display:grid;grid-template-columns:auto 1fr;gap:1.4vh 2vw;align-items:center;text-align:left;font-size:clamp(16px,2vw,27px)}
+
+  /* quiz */
+  .quiz{display:flex;flex-direction:column;gap:1.2vh;width:min(1100px,90vw)}
+  .q{color:var(--ink);background:#fff;border-radius:14px;padding:.6em 1em;text-align:left;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.1);font-size:clamp(15px,1.9vw,25px)}
+  .q .a{display:none;color:#1a7f37;font-weight:700;margin-top:.3em}
+  .q.open .a{display:block}
+  .q::after{content:"tap to see answer 👀";float:right;font-size:.7em;opacity:.5;margin-top:.3em}
+  .q.open::after{content:""}
+
+  .dos{font-family:"Courier New",monospace;color:#c0c0c0;font-size:clamp(17px,2.2vw,30px);text-align:left}
+  .cursor{animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  .note{position:absolute;left:0;right:0;bottom:8vh;margin:auto;width:min(900px,90vw);background:rgba(255,255,255,.96);color:#333;border-left:8px solid var(--yellow);border-radius:12px;padding:10px 16px;font-size:18px;text-align:left;display:none;font-family:"Segoe UI",system-ui,sans-serif;z-index:5}
+  body.notes .slide.active .note{display:block}
+
+  /* level switcher */
+  .levels{position:fixed;top:1.4vh;left:0;right:0;margin:auto;width:max-content;display:flex;gap:6px;background:rgba(0,0,0,.55);padding:6px;border-radius:999px;z-index:20;font-family:"Segoe UI",system-ui,sans-serif;backdrop-filter:blur(6px)}
+  .levels button{border:0;border-radius:999px;padding:8px 20px;font-size:17px;font-weight:700;cursor:pointer;background:transparent;color:#fff;display:flex;gap:8px;align-items:center}
+  .levels button small{font-weight:400;opacity:.8;font-size:13px}
+  .levels button.on[data-l=easy]{background:#2fb344}
+  .levels button.on[data-l=medium]{background:#f59f00}
+  .levels button.on[data-l=hard]{background:#e03131}
+  .levels button:not(.on):hover{background:rgba(255,255,255,.15)}
+
+  /* bottom controls */
+  .bar{position:fixed;left:0;right:0;bottom:0;height:6.5vh;min-height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 2vw;background:rgba(0,0,0,.55);color:#fff;z-index:10;font-family:"Segoe UI",system-ui,sans-serif}
+  .bar button{background:#fff;color:var(--ink);border:0;border-radius:999px;padding:6px 18px;font-size:18px;font-weight:700;cursor:pointer}
+  .dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:60vw}
+  .dots i{width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer}
+  .dots i.on{background:var(--yellow)}
+  .hint{font-size:13px;opacity:.75}
+
+  @media print{
+    @page{size:A4 landscape;margin:0}
+    html,body{background:#fff}
+    .deck.on{height:auto;overflow:visible}
+    .slide{position:relative;opacity:1;transform:none;height:100vh;padding-top:5vh;page-break-after:always;break-after:page;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .bar,.note,.levels{display:none!important}
+    .q .a{display:block}.q::after{content:""}
+  }
+  /* ---------- v3 additions ---------- */
+  .story{display:none}
+  .chain{display:flex;align-items:stretch;gap:.6vw;width:min(1350px,95vw)}
+  .chain .step{flex:1;background:#fff;color:var(--ink);border-radius:16px;padding:1.4vh .6vw;box-shadow:0 6px 16px rgba(0,0,0,.12);display:flex;flex-direction:column;align-items:center;gap:6px}
+  .chain .step .huge-emoji{font-size:clamp(30px,4vw,56px)}
+  .chain .step b{font-size:clamp(14px,1.6vw,22px)}
+  .chain .step small{font-size:clamp(11px,1.2vw,16px);color:#445}
+  .chain .ar{align-self:center;font-size:clamp(18px,2.4vw,34px)}
+  .cards.c3{grid-template-columns:repeat(3,1fr);width:min(1000px,88vw)}
+  .cards.c6{grid-template-columns:repeat(3,1fr);width:min(1100px,90vw)}
+
+  .modebtn{border:0;border-radius:999px;padding:8px 18px;font-size:17px;font-weight:700;cursor:pointer;background:#fff;color:var(--ink);margin-left:8px}
+  body.storymode .modebtn{background:#7048e8;color:#fff}
+
+  /* notebook / story-teller view */
+  #story{display:none;position:fixed;inset:0;overflow-y:auto;padding:10vh 0 6vh;background:#f4efe3}
+  body.storymode #story{display:block}
+  body.storymode .deck,body.storymode .bar{display:none!important}
+  .sb-wrap{width:min(1000px,94vw);margin:0 auto;display:flex;flex-direction:column;gap:28px}
+  .sb-head{background:#fff;border-radius:18px;padding:22px 28px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .sb-head h1{font-size:clamp(26px,3.4vw,42px)}
+  .sb-head p{font-size:18px;margin-top:8px;font-family:"Segoe UI",system-ui,sans-serif;line-height:1.5}
+  .tips{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .tips span{background:#fff4c2;border-radius:999px;padding:6px 14px;font-size:16px;font-weight:700}
+  .page{position:relative;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.1);padding:22px 28px 26px 92px;
+    background:#fffdf6 repeating-linear-gradient(#fffdf6 0 37px,#b9d3f0 37px 38px);background-attachment:local}
+  .page::before{content:"";position:absolute;left:66px;top:0;bottom:0;width:2px;background:#f2a1a1}
+  .page .pno{position:absolute;left:14px;top:22px;width:40px;height:40px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:system-ui}
+  .page h3{font-size:clamp(22px,2.6vw,32px);line-height:38px;color:#0b3d91}
+  .page .body{display:flex;gap:22px;margin-top:6px}
+  .page .thumb{flex:0 0 190px;display:flex;flex-direction:column;gap:8px}
+  .page .thumb img{width:190px;border-radius:8px;border:4px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,.15);background:#fff}
+  .page .draw{font-size:16px;line-height:1.4;background:#e9f7ef;border-radius:10px;padding:8px 10px}
+  .page .say{flex:1;font-size:clamp(18px,1.9vw,22px);line-height:38px}
+  .page .say p{margin:0}
+  .page .say .lbl{display:inline-block;background:#7048e8;color:#fff;border-radius:8px;padding:0 10px;font-size:15px;line-height:26px;margin-right:6px;font-family:system-ui}
+  .page .say .q{all:unset}
+  .page .go{position:absolute;right:16px;top:20px;border:0;background:#e7ecf7;border-radius:999px;padding:4px 12px;cursor:pointer;font-size:14px}
+  @media (max-width:700px){.page .body{flex-direction:column}.page{padding-left:70px}.page::before{left:54px}}
+  @media print{
+    body.storymode #story{position:static;overflow:visible;padding:0;background:#fff}
+    body.storymode .page{break-inside:avoid;box-shadow:none;border:1px solid #ccc}
+    body.storymode .go{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="levels" id="levels">
+  <button data-l="easy">🟢 Easy <small>15 pages</small></button>
+  <button data-l="medium">🟡 Medium <small>25 pages</small></button>
+  <button data-l="hard">🔴 Hard <small>35 pages</small></button>
+  <button class="modebtn" id="storyBtn">📖 Story teller</button>
+</div>
+<div id="story"></div>
+
+<!-- ===================================================== EASY (15) -->
+<div class="deck" data-level="easy">
+
+  <section class="slide bg-title">
+    <div class="winlogo"><span></span><span></span><span></span><span></span></div>
+    <h1>Microsoft Windows</h1>
+    <p class="big">The helper that makes computers easy! 😊</p>
+    <p class="big" style="margin-top:2vh">By: ____________ &nbsp;·&nbsp; Class 4</p>
+    <div class="story" data-draw="The Windows logo: 4 squares coloured red, green, blue and yellow.">
+      <p>Good morning, friends! Close your eyes and imagine a computer with <b>no pictures, no colours and no mouse</b>. Strange, right?</p>
+      <p>Today I will tell you the story of a magic helper that made computers easy for everyone. Its name is <b>Microsoft Windows</b>!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sky">
+    <h2>What is Windows? 🤔</h2>
+    <figure class="pic wide"><img src="img/win11.png" alt="Windows 11 screen"><div class="fallback">🖥️</div><figcaption>This is Windows 11</figcaption></figure>
+    <div class="compare">
+      <div class="bubble">🏫 School → 👩‍🏫 Teacher</div>
+      <div class="bubble">💻 Computer → ⊞ Windows</div>
+    </div>
+    <div class="story" data-draw="A school with a teacher on one side, and a computer with the Windows logo on the other side.">
+      <p>In our school, the <b>teacher</b> keeps everything in order. Inside a computer, <b>Windows</b> does the same job.</p>
+      <p>When we click on something, Windows tells the computer what to do. A helper like this is called an <b>Operating System</b>.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sun">
+    <h2>Why the name “Windows”? 🏠</h2>
+    <figure class="pic wide"><img src="img/win3.png" alt="Many windows open on Windows 3.0"><div class="fallback">🖼️🖼️🖼️</div><figcaption>Every app opens in its own box</figcaption></figure>
+    <p class="big">Each box is a <span class="pill">window</span> — just like the windows in our house!</p>
+    <div class="story" data-draw="A computer screen with 3 boxes inside it. Label them: Paint, Calculator, Notes.">
+      <p>Why is it called “Windows”? When we open Paint, it opens in a <b>box</b>. When we open the calculator, it opens in <b>another box</b>.</p>
+      <p>Each box is called a <b>window</b> — just like the windows in our house!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-mint">
+    <h2>Who made it? 👨‍💻👨‍💻</h2>
+    <div class="row">
+      <figure class="pic tall"><img src="img/gates.jpg" alt="Bill Gates"><div class="fallback">🧑</div><figcaption>Bill Gates</figcaption></figure>
+      <figure class="pic tall"><img src="img/allen.jpg" alt="Paul Allen"><div class="fallback">🧑</div><figcaption>Paul Allen</figcaption></figure>
+    </div>
+    <p class="big">Two school friends started <b>Microsoft</b> in <span class="year">1975</span></p>
+    <div class="story" data-draw="Two friends standing next to a computer. Write: Bill Gates and Paul Allen, 1975.">
+      <p>Long ago, in <b>1975</b>, two school friends in America — <b>Bill Gates</b> and <b>Paul Allen</b> — loved computers very much.</p>
+      <p>They started a company called <b>Microsoft</b>. Later, Microsoft made Windows.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-night">
+    <h2>Before Windows… 😴</h2>
+    <figure class="pic wide"><img class="pixel" src="img/dos.png" alt="MS-DOS black screen"><div class="fallback">⬛</div><figcaption>MS-DOS: only a black screen</figcaption></figure>
+    <p class="dos">C:\&gt; type secret words to do anything<span class="cursor">_</span></p>
+    <p class="big" style="color:#fff">❌ No pictures &nbsp; ❌ No mouse</p>
+    <div class="story" data-draw="A black screen with white letters: C:\>_">
+      <p>But before Windows, computers had only a <b>black screen</b>. There were no pictures and no mouse.</p>
+      <p>People had to type <b>secret words</b> to make the computer work. One small spelling mistake, and — oops — it would not work!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-peach">
+    <h2>Windows 1.0 is born! 🎂 <span class="year">1985</span></h2>
+    <div class="row">
+      <figure class="pic"><img src="img/win1.png" alt="Windows 1.0 screen"><div class="fallback">🖥️</div><figcaption>The very first Windows</figcaption></figure>
+      <figure class="pic"><img src="img/mouse.jpg" alt="Computer mouse"><div class="fallback">🖱️</div><figcaption>Now we can click a mouse!</figcaption></figure>
+    </div>
+    <p class="big">Pictures + clicking = easy! 👆✨</p>
+    <div class="story" data-draw="A computer mouse and a birthday cake with “1985” on it.">
+      <p>Then, in <b>1985</b>, the very first Windows was born — Happy birthday, Windows!</p>
+      <p>Now people could see <b>pictures</b> and <b>click with a mouse</b>. Computers became much easier.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sky">
+    <h2>Windows 95 <span class="year">1995</span></h2>
+    <figure class="pic wide"><img src="img/win95.png" alt="Windows 95 desktop"><div class="fallback">🖥️</div><figcaption>Look at the bottom left corner 👇</figcaption></figure>
+    <p class="big">The famous <span class="pill" style="background:#008080">⊞ Start</span> button was born!</p>
+    <div class="story" data-draw="A green screen with a small “Start” button in the bottom-left corner.">
+      <p>Ten years later came <b>Windows 95</b>. It gave us the famous <b>Start button</b>.</p>
+      <p>People were so excited that they stood in long lines at <b>midnight</b> to buy it!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-xp">
+    <h2>Windows XP <span class="year">2001</span></h2>
+    <div class="row">
+      <figure class="pic"><img src="img/bliss.png" alt="Bliss green hill wallpaper"><div class="fallback">🌄</div><figcaption>“Bliss” – a real hill in the USA 📸</figcaption></figure>
+      <figure class="pic"><img src="img/winxp.png" alt="Windows XP desktop"><div class="fallback">🖥️</div><figcaption>Colourful and friendly</figcaption></figure>
+    </div>
+    <p class="big" style="background:rgba(255,255,255,.85);border-radius:16px;padding:6px 18px">🌄 One of the most seen photos in the world!</p>
+    <div class="story" data-draw="A green hill under a blue sky with white clouds.">
+      <p>In <b>2001</b> came <b>Windows XP</b>. Have you seen this green hill picture? It is a <b>real photo</b> taken in America.</p>
+      <p>It is called <b>“Bliss”</b>, and millions of people saw it on their computers every day!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-mint">
+    <h2>Windows 7 <span class="year">2009</span></h2>
+    <figure class="pic wide"><img src="img/win7.png" alt="Windows 7 desktop"><div class="fallback">🖥️</div><figcaption>Windows 7</figcaption></figure>
+    <p class="big">⚡ Fast &nbsp; 😊 Simple &nbsp; ❤️ Loved by everyone</p>
+    <div class="story" data-draw="A blue screen with a colourful waving flag in the middle.">
+      <p>In <b>2009</b> came <b>Windows 7</b>. It was fast and simple.</p>
+      <p>People loved it so much that many families used it for more than ten years!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-lilac">
+    <h2>Windows 11 — today! <span class="year">2021</span></h2>
+    <figure class="pic wide"><img src="img/win11.png" alt="Windows 11"><div class="fallback">🖥️</div><figcaption>Windows 11</figcaption></figure>
+    <p class="big">🎯 Start button in the middle &nbsp; 🔵 Round corners &nbsp; 🤖 A helper you can talk to</p>
+    <div class="story" data-draw="A taskbar with the Start button in the middle and round-cornered boxes.">
+      <p>Today, many of us use <b>Windows 11</b>. The Start button now sits in the <b>middle</b>, and the corners are round and soft.</p>
+      <p>It even has a helper called <b>Copilot</b> that you can ask questions!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sun">
+    <h2>Windows grows up! 📈</h2>
+    <div class="timeline">
+      <div class="t"><img src="img/win1.png" alt=""><span class="yr">1985</span><b>1.0</b></div>
+      <div class="t"><img src="img/win3.png" alt=""><span class="yr">1990</span><b>3.0</b></div>
+      <div class="t"><img src="img/win95.png" alt=""><span class="yr">1995</span><b>95</b></div>
+      <div class="t"><img src="img/winxp.png" alt=""><span class="yr">2001</span><b>XP</b></div>
+      <div class="t"><img src="img/win7.png" alt=""><span class="yr">2009</span><b>7</b></div>
+      <div class="t"><img src="img/win10.png" alt=""><span class="yr">2015</span><b>10</b></div>
+      <div class="t"><img src="img/win11.png" alt=""><span class="yr">2021</span><b>11</b></div>
+    </div>
+    <div class="line"></div>
+    <p class="big">From black-and-white boxes 👉 to beautiful screens ✨</p>
+    <div class="story" data-draw="A long line with dots: 1985 (1.0), 1995 (95), 2001 (XP), 2009 (7), 2015 (10), 2021 (11).">
+      <p>See how Windows <b>grew up</b>, just like us! It started as simple black-and-white boxes in 1985.</p>
+      <p>Every few years it became faster and more beautiful — 95, XP, 7, 10 and now 11.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-peach">
+    <h2>Parts of the Windows screen 🖥️</h2>
+    <div class="split">
+      <div class="mock">
+        <div class="icons"><div class="ic">🗑️</div><div class="ic">📁</div><div class="ic">🌐</div></div>
+        <div class="win"></div>
+        <div class="tb"><span class="st"></span><span></span><span></span><span></span></div>
+        <div class="clock">10:30</div>
+        <div class="num" style="left:84%;top:40%">1</div>
+        <div class="num" style="left:10%;top:3%">2</div>
+        <div class="num" style="left:46%;top:94%;transform:translateY(-100%)">3</div>
+      </div>
+      <div class="legend">
+        <div><b>1</b>Desktop – the background</div>
+        <div><b>2</b>Icons – little pictures</div>
+        <div><b>3</b>Taskbar – the strip at the bottom</div>
+      </div>
+    </div>
+    <div class="story" data-draw="A computer screen. Label 3 parts: 1 Desktop, 2 Icons, 3 Taskbar.">
+      <p>Let me show you the parts of the Windows screen. The big background is the <b>desktop</b>.</p>
+      <p>The little pictures are <b>icons</b> — click them to open apps. The strip at the bottom is the <b>taskbar</b>.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-mint">
+    <h2>Magic keys! ⌨️✨</h2>
+    <div class="keys">
+      <span><kbd>Ctrl</kbd> + <kbd>Z</kbd></span><span>Undo a mistake ↩️</span>
+      <span><kbd>Ctrl</kbd> + <kbd>C</kbd></span><span>Copy 📋</span>
+      <span><kbd>Ctrl</kbd> + <kbd>V</kbd></span><span>Paste 📌</span>
+    </div>
+    <div class="story" data-draw="Three keyboard keys: Ctrl, Z, C, V.">
+      <p>Here is a <b>secret trick</b>! If you make a mistake, press <b>Ctrl and Z</b> together — the mistake disappears!</p>
+      <p><b>Ctrl + C</b> copies something and <b>Ctrl + V</b> pastes it. Try it at home!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-lilac">
+    <h2>Mini quiz! 🧠</h2>
+    <div class="quiz">
+      <div class="q">1. Who started Microsoft?<div class="a">✅ Bill Gates and Paul Allen</div></div>
+      <div class="q">2. Which Windows gave us the Start button?<div class="a">✅ Windows 95</div></div>
+      <div class="q">3. What is the green hill picture called?<div class="a">✅ Bliss</div></div>
+    </div>
+    <div class="story" data-draw="A big question mark.">
+      <p>Now, a small quiz! Raise your hand if you know.</p>
+      <p>1. Who started Microsoft? <i>(Bill Gates and Paul Allen)</i><br>2. Which Windows gave us the Start button? <i>(Windows 95)</i><br>3. What is the green hill picture called? <i>(Bliss)</i></p>
+    </div>
+  </section>
+
+  <section class="slide bg-mint">
+    <h2>What can we do with Windows? 🎉</h2>
+    <div class="cards">
+      <div class="card"><div class="huge-emoji">🎨</div><p>Draw in Paint</p></div>
+      <div class="card"><div class="huge-emoji">📝</div><p>Do homework</p></div>
+      <div class="card"><div class="huge-emoji">🎮</div><p>Play games</p></div>
+      <div class="card"><div class="huge-emoji">🌐</div><p>Learn online</p></div>
+    </div>
+    <p class="big">🌍 More than <b>1 billion</b> computers use Windows!</p>
+    <h2>Thank you! 🙏 Any questions? 🙋</h2>
+    <div class="story" data-draw="A paintbrush, a notebook, a game controller and a globe.">
+      <p>With Windows we can <b>draw, do homework, play games</b> and <b>learn new things</b>. More than <b>one billion</b> computers use Windows!</p>
+      <p>So next time you click on a computer, remember the magic helper inside it. <b>Thank you!</b></p>
+    </div>
+  </section>
+</div>
+
+<!-- ===================================================== MEDIUM (25) -->
+<div class="deck" data-level="medium">
+
+  <section class="slide bg-title med">
+    <div class="winlogo"><span></span><span></span><span></span><span></span></div>
+    <h1>Microsoft Windows</h1>
+    <p class="big">40 years of the world's favourite computer helper</p>
+    <span class="badge">1985 → today</span>
+    <p class="big" style="margin-top:1vh">By: ____________ &nbsp;·&nbsp; Class 4</p>
+    <div class="story" data-draw="The Windows logo (4 coloured squares) and the words “1985 → today”.">
+      <p>Good morning, everyone! Raise your hand if you have used a computer. Almost all of you!</p>
+      <p>Most of those computers have a hidden helper inside them. Today I will tell you its story — the story of <b>Microsoft Windows</b>: what it is, who made it, and how it changed over <b>40 years</b>.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sky">
+    <h2>Windows is an <span class="hl">Operating System</span> (OS)</h2>
+    <div class="stack">
+      <div style="background:#7048e8">🧒 You <small>click, type, touch</small></div>
+      <div style="background:#1c7ed6">📱 Apps <small>Paint, Chrome, games</small></div>
+      <div style="background:#0ca678">⊞ Windows (the OS) <small>the manager in the middle</small></div>
+      <div style="background:#495057">🔧 Hardware <small>screen, keyboard, memory, chip</small></div>
+    </div>
+    <p class="mid">The OS is the <b>middle-man</b>: it passes our wishes to the machine.</p>
+    <div class="story" data-draw="4 boxes stacked like a cake: You → Apps → Windows → Hardware.">
+      <p>Think of a computer like a <b>layered cake</b>. At the top is <b>you</b>. Below you are the <b>apps</b>, like Paint or games. At the bottom is the <b>hardware</b> — the screen, keyboard and chips.</p>
+      <p>And in the middle sits <b>Windows</b>. When I click on Paint, I don't talk to the computer chip directly — Windows passes my message along. That's why it's called an <b>Operating System</b>, or OS.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sun">
+    <h2>Windows has 4 big jobs 💼</h2>
+    <div class="cards">
+      <div class="card"><div class="huge-emoji">📂</div><p>Files</p><small>keeps every file in the right folder</small></div>
+      <div class="card"><div class="huge-emoji">🧠</div><p>Memory</p><small>shares the computer's memory between apps</small></div>
+      <div class="card"><div class="huge-emoji">🖨️</div><p>Devices</p><small>talks to the mouse, printer, speakers</small></div>
+      <div class="card"><div class="huge-emoji">🔒</div><p>Safety</p><small>passwords and virus protection</small></div>
+    </div>
+    <div class="story" data-draw="4 boxes: a folder (Files), a brain (Memory), a printer (Devices), a lock (Safety).">
+      <p>Windows is like a very busy <b>manager</b> with four big jobs.</p>
+      <p>One — it keeps our <b>files</b> in the right folders. Two — it shares the computer's <b>memory</b> between apps. Three — it talks to <b>devices</b> like the printer and speakers. And four — it keeps us <b>safe</b> with passwords and virus protection.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-peach">
+    <h2>Pictures, not typing: the <span class="hl">GUI</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/win3.png" alt="Windows 3.0 with many windows"><div class="fallback">🖼️</div><figcaption>Many windows open together</figcaption></figure>
+      <div class="txt">
+        <p class="big"><b>G</b>raphical <b>U</b>ser <b>I</b>nterface</p>
+        <ul class="list mid" style="margin-top:2vh">
+          <li>🖼️ Icons = little pictures</li>
+          <li>🪟 Each app = its own box, a “window”</li>
+          <li>🖱️ Point and click to do things</li>
+        </ul>
+      </div>
+    </div>
+    <div class="story" data-draw="A screen with 3 overlapping boxes and a mouse arrow. Write: GUI = Graphical User Interface.">
+      <p>Windows shows us <b>pictures</b> instead of making us type. This is called a <b>GUI</b> — a <b>Graphical User Interface</b>.</p>
+      <p>Little pictures are called <b>icons</b>, and every app opens in its own box called a <b>window</b>. That is where the name “Windows” comes from!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-mint">
+    <h2>Microsoft is born <span class="year">1975</span></h2>
+    <div class="row" style="flex-wrap:nowrap">
+      <figure class="pic sm"><img src="img/gates.jpg" alt="Bill Gates"><div class="fallback">🧑</div><figcaption>Bill Gates</figcaption></figure>
+      <figure class="pic sm"><img src="img/allen.jpg" alt="Paul Allen"><div class="fallback">🧑</div><figcaption>Paul Allen</figcaption></figure>
+      <ul class="list mid">
+        <li>👦👦 School friends from Seattle, USA</li>
+        <li>💡 “Micro-computer” + “Software” = <b>Microsoft</b></li>
+        <li>🏢 Today: one of the biggest companies on Earth</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="Two friends with a computer. Write: MICRO-computer + SOFT-ware = MICROSOFT.">
+      <p>Our story begins in <b>1975</b> with two school friends from Seattle, America — <b>Bill Gates</b> and <b>Paul Allen</b>. They loved computers more than anything.</p>
+      <p>They started a company and joined two words to name it: <b>micro</b>-computer + <b>soft</b>ware = <b>Microsoft</b>. Today it is one of the biggest companies on Earth!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-night">
+    <h2>Before Windows: <span class="hl">MS-DOS</span> <span class="year" style="background:#fff;color:#000">1981</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/dosprompt.jpg" alt="DOS prompt on an old IBM monitor"><div class="fallback">⬛</div><figcaption>A real DOS screen</figcaption></figure>
+      <div class="txt">
+        <p class="dos">C:\&gt; DIR &nbsp;&nbsp;<span style="color:#7fd">← show files</span></p>
+        <p class="dos">C:\&gt; CD GAMES <span style="color:#7fd">← open folder</span></p>
+        <p class="dos">C:\&gt; _<span class="cursor">▌</span></p>
+        <p class="mid" style="color:#fff;margin-top:2vh">Every job needed a typed command.<br>One spelling mistake = ❌ error!</p>
+      </div>
+    </div>
+    <div class="story" data-draw="An old computer with a black screen showing: C:\> DIR">
+      <p>But before Windows, computers used something called <b>MS-DOS</b>. The screen was black, and there was <b>no mouse</b>.</p>
+      <p>To see your files, you had to type <b>DIR</b>. To open a folder, you typed <b>CD</b> and its name. One spelling mistake, and you got an <b>error</b>! Only experts could use computers.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-lilac">
+    <h2>Where did the idea come from? 💡</h2>
+    <div class="row">
+      <figure class="pic sm"><img src="img/alto.jpg" alt="Xerox Alto"><div class="fallback">🖥️</div><figcaption>Xerox Alto · 1973</figcaption></figure>
+      <span class="arrow">➜</span>
+      <figure class="pic sm"><img src="img/mac.jpg" alt="Apple Macintosh"><div class="fallback">🍎</div><figcaption>Apple Macintosh · 1984</figcaption></figure>
+      <span class="arrow">➜</span>
+      <figure class="pic sm"><img src="img/win1.png" alt="Windows 1.0"><div class="fallback">⊞</div><figcaption>Windows 1.0 · 1985</figcaption></figure>
+    </div>
+    <p class="mid">Scientists at <b>Xerox</b> invented windows + mouse. <b>Apple</b> made it popular. <b>Microsoft</b> brought it to millions of PCs.</p>
+    <div class="story" data-draw="Three computers with arrows between them: Xerox 1973 → Apple 1984 → Windows 1985.">
+      <p>So who had the idea of pictures and a mouse? It was scientists at a company called <b>Xerox</b>, back in <b>1973</b>.</p>
+      <p>Then <b>Apple</b> made it famous with the <b>Macintosh</b> in 1984. Just one year later, Microsoft brought the same idea to millions of computers with Windows.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-peach">
+    <h2>Windows 1.0 <span class="year">1985</span></h2>
+    <div class="row">
+      <figure class="pic"><img src="img/gates_tandy.jpg" alt="Bill Gates with Windows 1.0 in 1984"><div class="fallback">🧑‍💻</div><figcaption>Young Bill Gates showing Windows (1984)</figcaption></figure>
+      <figure class="pic"><img src="img/win1.png" alt="Windows 1.0"><div class="fallback">🖥️</div><figcaption>Windows 1.0</figcaption></figure>
+    </div>
+    <p class="mid">😮 Windows could <b>not overlap</b> — they sat side by side, like tiles on a floor.</p>
+    <div class="story" data-draw="A screen split into tiles placed side by side, with no box on top of another.">
+      <p>And so, in <b>1985</b>, <b>Windows 1.0</b> was born! Here is a young Bill Gates showing it.</p>
+      <p>But it was very simple. The windows could <b>not sit on top of each other</b> — they were placed side by side, like tiles on a floor.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sun">
+    <h2>Apps older than your parents! 👴</h2>
+    <div class="cards">
+      <div class="card"><div class="huge-emoji">🎨</div><p>Paint</p><small>still in Windows 11!</small></div>
+      <div class="card"><div class="huge-emoji">📝</div><p>Notepad</p><small>still in Windows 11!</small></div>
+      <div class="card"><div class="huge-emoji">🧮</div><p>Calculator</p><small>still in Windows 11!</small></div>
+      <div class="card"><div class="huge-emoji">⏰</div><p>Clock</p><small>still in Windows 11!</small></div>
+    </div>
+    <p class="mid">All of these came with Windows 1.0 in <b>1985</b> — and we still use them today.</p>
+    <div class="story" data-draw="4 icons: a paint palette, a notepad, a calculator and a clock. Write “Since 1985”.">
+      <p>Here is something amazing. Windows 1.0 came with <b>Paint, Notepad, a Calculator and a Clock</b>.</p>
+      <p>These apps are <b>more than 40 years old</b> — older than many of our parents — and they are <b>still inside Windows 11</b> today!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-lilac">
+    <h2>Windows 2.0 <span class="year">1987</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/win2.png" alt="Windows 2.0"><div class="fallback">🖥️</div><figcaption>Windows 2.0</figcaption></figure>
+      <ul class="list mid txt">
+        <li>🗂️ Windows could finally <b>overlap</b></li>
+        <li>😠 Apple said: “You copied our Mac!”</li>
+        <li>⚖️ They went to court… and Microsoft <b>won</b></li>
+      </ul>
+    </div>
+    <div class="story" data-draw="Two boxes overlapping, and a judge's hammer.">
+      <p>Two years later, <b>Windows 2.0</b> let windows finally <b>overlap</b>, one on top of another.</p>
+      <p>But Apple was angry! They said Windows looked too much like their Mac, and took Microsoft to <b>court</b>. After many years, the court decided Microsoft had done nothing wrong.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sun">
+    <h2>Windows 3.0 & 3.1 <span class="year">1990</span></h2>
+    <div class="row">
+      <figure class="pic"><img src="img/win3.png" alt="Windows 3.0"><div class="fallback">🖥️</div><figcaption>Windows 3.0</figcaption></figure>
+      <figure class="pic"><img src="img/floppy.jpg" alt="Windows 3.11 floppy disks"><div class="fallback">💾</div><figcaption>It came on 9 floppy disks! 💾</figcaption></figure>
+    </div>
+    <p class="mid">🃏 The <b>Solitaire</b> card game was added to teach people how to drag with a mouse!</p>
+    <div class="story" data-draw="A stack of floppy disks and a playing card.">
+      <p>In <b>1990</b> came <b>Windows 3</b>, and it became a <b>huge hit</b>. It came on a pile of <b>floppy disks</b> — nine of them for one version!</p>
+      <p>Fun fact: the card game <b>Solitaire</b> was added on purpose — to help people <b>practise dragging with the mouse</b>. Learning while playing!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sky">
+    <h2>Windows 95 <span class="year">1995</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/win95.png" alt="Windows 95"><div class="fallback">🖥️</div><figcaption>Windows 95</figcaption></figure>
+      <ul class="list mid txt">
+        <li>▶️ The <b>Start button</b> was born</li>
+        <li>📊 The <b>taskbar</b> showed all open apps</li>
+        <li>🌙 People queued at <b>midnight</b> to buy it</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="A taskbar with a “Start” button on the left side.">
+      <p>Then came the most exciting moment — <b>Windows 95</b>! It gave us the <b>Start button</b> and the <b>taskbar</b>, which we still use today.</p>
+      <p>People were so excited that they stood in long lines at <b>midnight</b> just to buy it, like fans waiting for a new movie!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-peach">
+    <h2>Windows 98 & the internet 🌐 <span class="year">1998</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/win98.png" alt="Windows 98"><div class="fallback">🖥️</div><figcaption>Windows 98</figcaption></figure>
+      <ul class="list mid txt">
+        <li>🌐 <b>Internet Explorer</b> built right in</li>
+        <li>📧 Families started using <b>email</b> and websites</li>
+        <li>🔌 Easier to plug in <b>USB</b> devices</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="A globe connected to a computer with a wire.">
+      <p>Around this time, something new arrived — the <b>internet</b>! <b>Windows 98</b> came with a web browser called <b>Internet Explorer</b> built in.</p>
+      <p>For the first time, many families could send <b>emails</b> and visit <b>websites</b> from home.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-xp">
+    <h2>Windows XP <span class="year">2001</span></h2>
+    <div class="row">
+      <figure class="pic"><img src="img/bliss.png" alt="Bliss"><div class="fallback">🌄</div><figcaption>“Bliss” photo · California, 1996</figcaption></figure>
+      <figure class="pic"><img src="img/winxp.png" alt="Windows XP"><div class="fallback">🖥️</div><figcaption>XP = “eXPerience”</figcaption></figure>
+    </div>
+    <p class="mid" style="background:rgba(255,255,255,.88);border-radius:16px;padding:6px 18px">📸 The green hill is a <b>real photo</b>. XP was used for over 12 years!</p>
+    <div class="story" data-draw="A green hill under a blue sky. Write: Bliss, 1996.">
+      <p>In <b>2001</b> came <b>Windows XP</b> — XP stands for “<b>eXPerience</b>”. Do you know this green hill?</p>
+      <p>It is a <b>real photo</b> called “<b>Bliss</b>”, taken in California in 1996. People loved XP so much that they kept using it for <b>more than 12 years</b>!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-lilac">
+    <h2>Windows Vista <span class="year">2007</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/vista.png" alt="Windows Vista"><div class="fallback">🖥️</div><figcaption>Shiny “glass” look</figcaption></figure>
+      <ul class="list mid txt">
+        <li>✨ Beautiful see-through glass windows</li>
+        <li>🐢 But it was <b>slow</b> on many computers</li>
+        <li>😕 Many people didn't like it</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="A shiny glass window next to a tortoise.">
+      <p>But not every Windows was a success. <b>Windows Vista</b>, in <b>2007</b>, looked beautiful — like shiny glass.</p>
+      <p>The problem? It was <b>slow</b> on many computers, like a tortoise. Many people were unhappy.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-mint">
+    <h2>Windows 7 <span class="year">2009</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/win7.png" alt="Windows 7"><div class="fallback">🖥️</div><figcaption>Windows 7</figcaption></figure>
+      <ul class="list mid txt">
+        <li>⚡ Fast and simple again</li>
+        <li>📌 Pin your favourite apps to the taskbar</li>
+        <li>❤️ One of the <b>most loved</b> versions ever</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="A blue screen with a colourful flag and a pin on the taskbar.">
+      <p>Microsoft <b>listened</b> to people and made <b>Windows 7</b> in <b>2009</b>. It was fast and simple again.</p>
+      <p>You could <b>pin</b> your favourite apps to the taskbar. It became one of the <b>most loved</b> Windows ever.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-peach">
+    <h2>Windows 8 <span class="year">2012</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/win8.png" alt="Windows 8 Start screen"><div class="fallback">🖥️</div><figcaption>Big colourful tiles</figcaption></figure>
+      <ul class="list mid txt">
+        <li>👆 Made for <b>touch screens</b> and tablets</li>
+        <li>😮 The Start button <b>disappeared!</b></li>
+        <li>🔙 People complained → it came back in 8.1</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="A screen full of colourful square tiles.">
+      <p>Then tablets and touch screens became popular. So <b>Windows 8</b>, in <b>2012</b>, was full of big colourful <b>tiles</b> to touch.</p>
+      <p>But guess what — the <b>Start button disappeared</b>! People complained so much that Microsoft brought it back in <b>Windows 8.1</b>.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sky">
+    <h2>Windows 10 <span class="year">2015</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/win10.png" alt="Windows 10"><div class="fallback">🖥️</div><figcaption>Windows 10</figcaption></figure>
+      <ul class="list mid txt">
+        <li>▶️ Start menu is back (with tiles too)</li>
+        <li>🎁 <b>Free</b> upgrade for Windows 7 and 8 users</li>
+        <li>🤔 Wait… where is Windows <b>9</b>? Microsoft <b>skipped</b> it!</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="Numbers 7, 8, (9 crossed out), 10.">
+      <p>In <b>2015</b> came <b>Windows 10</b>, mixing the best of 7 and 8. Many people got it <b>for free</b>!</p>
+      <p>But wait — did you notice? There was <b>never a Windows 9</b>! Microsoft jumped straight from 8 to 10 to show it was a big step forward.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-lilac">
+    <h2>Windows 11 <span class="year">2021</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/win11.png" alt="Windows 11"><div class="fallback">🖥️</div><figcaption>Windows 11</figcaption></figure>
+      <ul class="list mid txt">
+        <li>🎯 Start button moved to the <b>middle</b></li>
+        <li>🔵 Soft, rounded corners everywhere</li>
+        <li>🤖 <b>Copilot</b>: an AI helper you can talk to</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="A taskbar with the Start button in the centre and a small robot for Copilot.">
+      <p>And today we have <b>Windows 11</b>, from <b>2021</b>. The Start button moved to the <b>middle</b> and all the corners are round.</p>
+      <p>It even has an <b>AI helper</b> called <b>Copilot</b> that can answer questions — just like talking to a smart friend!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sun">
+    <h2>Parts of the Windows screen 🖥️</h2>
+    <div class="split">
+      <div class="mock">
+        <div class="icons"><div class="ic">🗑️</div><div class="ic">📁</div><div class="ic">🌐</div></div>
+        <div class="win"></div>
+        <div class="tb"><span class="st"></span><span></span><span></span><span></span></div>
+        <div class="clock">10:30</div>
+        <div class="num" style="left:84%;top:40%">1</div>
+        <div class="num" style="left:10%;top:3%">2</div>
+        <div class="num" style="left:70%;top:6%">3</div>
+        <div class="num" style="left:46%;top:94%;transform:translateY(-100%)">4</div>
+        <div class="num" style="right:2%;top:72%">5</div>
+      </div>
+      <div class="legend">
+        <div><b>1</b>Desktop – the background</div>
+        <div><b>2</b>Icons – shortcuts to apps</div>
+        <div><b>3</b>Window – an open app</div>
+        <div><b>4</b>Taskbar & Start button</div>
+        <div><b>5</b>Clock & notifications</div>
+      </div>
+    </div>
+    <div class="story" data-draw="A screen labelled 1 Desktop, 2 Icons, 3 Window, 4 Taskbar & Start, 5 Clock.">
+      <p>Now let's look at the Windows screen. The background is the <b>desktop</b>. The small pictures are <b>icons</b>. An open app is a <b>window</b>.</p>
+      <p>At the bottom is the <b>taskbar</b> with the <b>Start button</b>, and in the corner, the <b>clock</b> and notifications.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-mint">
+    <h2>Super keyboard shortcuts ⌨️⚡</h2>
+    <div class="keys">
+      <span><kbd>Ctrl</kbd> + <kbd>C</kbd> / <kbd>V</kbd></span><span>Copy / Paste</span>
+      <span><kbd>Ctrl</kbd> + <kbd>Z</kbd></span><span>Undo a mistake ↩️</span>
+      <span><kbd>Alt</kbd> + <kbd>Tab</kbd></span><span>Jump between apps</span>
+      <span><kbd>⊞ Win</kbd> + <kbd>D</kbd></span><span>Show the desktop</span>
+      <span><kbd>⊞ Win</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd></span><span>Take a screenshot 📸</span>
+      <span><kbd>⊞ Win</kbd> + <kbd>L</kbd></span><span>Lock the computer 🔒</span>
+    </div>
+    <div class="story" data-draw="Keyboard keys: Ctrl + Z, Alt + Tab, Win + D.">
+      <p>Want to be a computer wizard? Learn these <b>shortcuts</b>! <b>Ctrl + Z</b> undoes a mistake. <b>Ctrl + C</b> and <b>Ctrl + V</b> copy and paste.</p>
+      <p><b>Alt + Tab</b> jumps between apps, <b>Windows key + D</b> shows the desktop, and <b>Windows key + L</b> locks the computer when you walk away.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-peach">
+    <h2>Staying safe on Windows 🛡️</h2>
+    <div class="cards">
+      <div class="card"><div class="huge-emoji">🔄</div><p>Update</p><small>updates fix weak spots</small></div>
+      <div class="card"><div class="huge-emoji">🦠</div><p>Antivirus</p><small>Windows Security is built in</small></div>
+      <div class="card"><div class="huge-emoji">🔑</div><p>Strong password</p><small>long and secret</small></div>
+      <div class="card"><div class="huge-emoji">🙋</div><p>Ask first</p><small>before downloading anything</small></div>
+    </div>
+    <div class="story" data-draw="A shield with a lock on it.">
+      <p>Computers can catch “illnesses” too — they are called <b>viruses</b>. Windows has a built-in guard called <b>Windows Security</b>.</p>
+      <p>To stay safe: keep Windows <b>updated</b>, use a <b>strong password</b>, and always <b>ask a grown-up</b> before downloading anything.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-lilac">
+    <h2>Windows has cousins! 👨‍👩‍👧</h2>
+    <div class="cards">
+      <div class="card"><div class="huge-emoji">⊞</div><p>Windows</p><small>Microsoft · most PCs</small></div>
+      <div class="card"><div class="huge-emoji">🍎</div><p>macOS</p><small>Apple · Mac computers</small></div>
+      <div class="card"><div class="huge-emoji">🐧</div><p>Linux</p><small>free · big servers</small></div>
+      <div class="card"><div class="huge-emoji">📱</div><p>Android / iOS</p><small>phones & tablets</small></div>
+    </div>
+    <p class="mid">They are all <b>operating systems</b> — just made by different companies.</p>
+    <div class="story" data-draw="4 icons: Windows logo, an apple, a penguin, a phone.">
+      <p>Windows is not the only operating system — it has <b>cousins</b>! Apple computers use <b>macOS</b>. <b>Linux</b> is free and runs many big servers. Phones use <b>Android</b> or <b>iOS</b>.</p>
+      <p>They all do the same job — managing the computer — but Windows is on about <b>7 out of 10</b> laptops and desktops.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-lilac">
+    <h2>Quiz time! 🧠</h2>
+    <div class="quiz">
+      <div class="q">1. Who started Microsoft?<div class="a">✅ Bill Gates and Paul Allen (1975)</div></div>
+      <div class="q">2. What does GUI stand for?<div class="a">✅ Graphical User Interface</div></div>
+      <div class="q">3. Which Windows gave us the Start button?<div class="a">✅ Windows 95</div></div>
+      <div class="q">4. What is the green hill wallpaper called?<div class="a">✅ Bliss (Windows XP)</div></div>
+      <div class="q">5. Which Windows number was skipped?<div class="a">✅ Windows 9</div></div>
+    </div>
+    <div class="story" data-draw="A big question mark with 5 numbered lines.">
+      <p>Let's see who was listening! Quiz time:</p>
+      <p>1. Who started Microsoft? <i>(Bill Gates and Paul Allen)</i><br>2. What does GUI stand for? <i>(Graphical User Interface)</i><br>3. Which Windows gave us the Start button? <i>(Windows 95)</i><br>4. What is the green hill picture called? <i>(Bliss)</i><br>5. Which Windows number was skipped? <i>(9)</i></p>
+    </div>
+  </section>
+
+  <section class="slide bg-title med">
+    <h2>Fun facts to remember 🌟</h2>
+    <div class="cards">
+      <div class="card"><div class="huge-emoji">🌍</div><p>1 billion+</p><small>computers use Windows</small></div>
+      <div class="card"><div class="huge-emoji">💻</div><p>7 out of 10</p><small>laptops & desktops run Windows</small></div>
+      <div class="card"><div class="huge-emoji">🎂</div><p>40 years</p><small>since Windows 1.0 (1985)</small></div>
+      <div class="card"><div class="huge-emoji">🔢</div><p>No “9”</p><small>it jumped from 8 to 10</small></div>
+    </div>
+    <h2>Thank you! 🙏 Any questions? 🙋</h2>
+    <div class="story" data-draw="A globe with the number “1,000,000,000+” and a birthday cake with “40”.">
+      <p>So that's the story of Windows! From a black screen with typed commands, to a friendly helper on <b>more than one billion</b> computers — <b>40 years</b> of changes.</p>
+      <p>And it all started with two school friends who loved computers. Maybe one of us will build the next big thing! <b>Thank you for listening. Any questions?</b></p>
+    </div>
+  </section>
+</div>
+
+<!-- ===================================================== HARD (35) -->
+<div class="deck" data-level="hard">
+
+  <section class="slide bg-title hard">
+    <div class="winlogo"><span></span><span></span><span></span><span></span></div>
+    <h1>Microsoft Windows</h1>
+    <p class="big">How an Operating System works, and how it changed the world</p>
+    <span class="badge">Kernels · GUIs · 40 years of history</span>
+    <p class="big" style="margin-top:1vh">By: ____________ &nbsp;·&nbsp; Class 4</p>
+    <div class="story" data-draw="The Windows logo, with gears around it.">
+      <p>Good morning, everyone! Every time you click on a computer, <b>thousands of tiny things happen</b> in less than a blink of an eye. Who makes all of that happen?</p>
+      <p>Today I will open up the computer and show you its secret manager — <b>Microsoft Windows</b>. I'll explain <b>how it works inside</b>, and tell you its <b>40-year story</b>, full of big ideas, mistakes and comebacks.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sky">
+    <h2>What is an Operating System? 🧩</h2>
+    <div class="split">
+      <div class="stack" style="flex:1.1">
+        <div style="background:#7048e8">📱 Applications <small>Word, Chrome, Minecraft</small></div>
+        <div style="background:#1c7ed6">🖥️ Shell / User interface <small>desktop, Start, taskbar</small></div>
+        <div style="background:#0ca678">⚙️ Kernel <small>the core “brain” of the OS</small></div>
+        <div style="background:#f08c00">🔌 Drivers <small>translators for each device</small></div>
+        <div style="background:#495057">🔧 Hardware <small>CPU, RAM, disk, screen</small></div>
+      </div>
+      <p class="mid txt">An <b>operating system</b> is the software that <span class="hl">manages the hardware</span> and lets every other program run on it.<br><br>Apps never touch the hardware directly — they ask the <b>kernel</b>.</p>
+    </div>
+    <div class="story" data-draw="5 stacked layers: Applications, Shell, Kernel, Drivers, Hardware (top to bottom).">
+      <p>An <b>operating system</b> is the software that manages all the hardware and lets other programs run. It is built in <b>layers</b>, like a building.</p>
+      <p>At the bottom is the <b>hardware</b> — the processor, memory and disk. Above it are <b>drivers</b>, which translate for each device. In the centre is the <b>kernel</b>, the brain that controls everything. On top is the <b>shell</b> we see — the desktop and Start menu — and then our <b>apps</b>. Apps never touch the hardware directly; they always ask the kernel.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sun">
+    <h2>The 5 jobs of an OS 💼</h2>
+    <table class="t2">
+      <tr><th>Job</th><th>What it means</th><th>It's like…</th></tr>
+      <tr><td>⏱️ Process management</td><td>Decides which program uses the CPU and when</td><td>A teacher choosing who speaks next</td></tr>
+      <tr><td>🧠 Memory management</td><td>Gives each program its own part of RAM</td><td>Giving each student their own desk</td></tr>
+      <tr><td>📂 File system</td><td>Stores files in folders on the disk</td><td>A library catalogue</td></tr>
+      <tr><td>🔌 Device management</td><td>Talks to printers, keyboards, Wi-Fi using drivers</td><td>An interpreter for each language</td></tr>
+      <tr><td>🔒 Security</td><td>User accounts, passwords, permissions, antivirus</td><td>The school security guard</td></tr>
+    </table>
+    <div class="story" data-draw="A table with 5 rows: Process, Memory, Files, Devices, Security — and a small drawing for each.">
+      <p>Every operating system has <b>five main jobs</b>. Let me compare them to our school.</p>
+      <p><b>Process management</b> is like a teacher choosing who speaks next. <b>Memory management</b> is like giving every student their own desk. The <b>file system</b> is like the library catalogue. <b>Device management</b> is like having an interpreter for every language. And <b>security</b> is the school's security guard.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-mint">
+    <h2>Multitasking: many apps at once? 🤹</h2>
+    <p class="mid">A CPU core can really do <b>one thing at a time</b>. The OS switches between apps <b>very fast</b>:</p>
+    <div class="slices"><span class="s1">🎵</span><span class="s2">🎨</span><span class="s3">🌐</span><span class="s4">📝</span><span class="s1">🎵</span><span class="s2">🎨</span><span class="s3">🌐</span><span class="s4">📝</span><span class="s1">🎵</span><span class="s2">🎨</span><span class="s3">🌐</span><span class="s4">📝</span></div>
+    <p class="mid">Each turn is a <span class="hl">time slice</span> of a few milliseconds — so fast it feels like everything runs together.</p>
+    <p class="small">Modern computers also have several cores, so a few apps truly run at the same moment.</p>
+    <div class="story" data-draw="A long strip divided into coloured boxes: music, paint, internet, notes, repeating.">
+      <p>Here is a puzzle: I can play music, draw in Paint and browse the internet <b>at the same time</b>. But one processor core can only do <b>one thing at a time</b>! How?</p>
+      <p>The answer is <b>time slicing</b>. Windows gives each app a tiny turn — just a few <b>milliseconds</b> — then switches to the next, again and again. It's so fast that it feels like everything runs together, like a juggler keeping many balls in the air.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-peach">
+    <h2>The journey of one click 🖱️➜🖥️</h2>
+    <div class="chain">
+      <div class="step"><div class="huge-emoji">🖱️</div><b>You click</b><small>the mouse sends an electric signal</small></div>
+      <span class="ar">➜</span>
+      <div class="step"><div class="huge-emoji">🔌</div><b>Driver</b><small>turns the signal into data</small></div>
+      <span class="ar">➜</span>
+      <div class="step"><div class="huge-emoji">⚙️</div><b>Kernel</b><small>sends a message to the right app</small></div>
+      <span class="ar">➜</span>
+      <div class="step"><div class="huge-emoji">📱</div><b>App</b><small>decides what to do</small></div>
+      <span class="ar">➜</span>
+      <div class="step"><div class="huge-emoji">🎨</div><b>Graphics</b><small>draws the new picture on screen</small></div>
+    </div>
+    <p class="mid">All of this happens in a <b>few milliseconds</b> ⚡</p>
+    <div class="story" data-draw="5 boxes with arrows: Click → Driver → Kernel → App → Screen.">
+      <p>Let's follow <b>one single click</b> on its journey. When I click the mouse, it sends an <b>electric signal</b>. The mouse <b>driver</b> turns that signal into data the computer understands.</p>
+      <p>The <b>kernel</b> works out which app I clicked on and sends it a message. The <b>app</b> decides what to do, and the <b>graphics driver</b> draws the new picture on the screen. All of that — in just a <b>few milliseconds</b>!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-lilac">
+    <h2>How Windows wakes up: booting 🥾</h2>
+    <div class="chain">
+      <div class="step"><div class="huge-emoji">⚡</div><b>Power on</b><small>electricity reaches the chips</small></div>
+      <span class="ar">➜</span>
+      <div class="step"><div class="huge-emoji">🔧</div><b>Firmware (UEFI)</b><small>checks the hardware is OK</small></div>
+      <span class="ar">➜</span>
+      <div class="step"><div class="huge-emoji">🥾</div><b>Boot loader</b><small>finds Windows on the disk</small></div>
+      <span class="ar">➜</span>
+      <div class="step"><div class="huge-emoji">⚙️</div><b>Kernel</b><small>starts and loads drivers</small></div>
+      <span class="ar">➜</span>
+      <div class="step"><div class="huge-emoji">🔑</div><b>Login</b><small>then your desktop appears</small></div>
+    </div>
+    <p class="mid">“Booting” comes from the old saying <i>“pulling yourself up by your bootstraps”</i> — the computer starts itself!</p>
+    <div class="story" data-draw="A boot, then arrows: Power → Check → Boot loader → Kernel → Login.">
+      <p>What happens when you press the power button? First, small built-in software called <b>firmware</b> (UEFI) checks that the hardware is working.</p>
+      <p>Then the <b>boot loader</b> finds Windows on the disk, the <b>kernel</b> starts and loads all the drivers, and finally the <b>login screen</b> appears. This is called <b>booting</b> — from the old saying “pulling yourself up by your bootstraps”, because the computer starts itself!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-night">
+    <h2>CLI vs GUI ⌨️ vs 🖱️</h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/dosprompt.jpg" alt="DOS command line"><div class="fallback">⬛</div><figcaption>A command line (DOS)</figcaption></figure>
+      <table class="t2" style="flex:1">
+        <tr><th></th><th>CLI</th><th>GUI</th></tr>
+        <tr><td>Full name</td><td>Command Line Interface</td><td>Graphical User Interface</td></tr>
+        <tr><td>You use</td><td>Typed commands</td><td>Mouse, icons, windows</td></tr>
+        <tr><td>Easy to learn?</td><td>❌ Hard</td><td>✅ Easy</td></tr>
+        <tr><td>Still used by</td><td>Programmers (PowerShell)</td><td>Almost everyone</td></tr>
+      </table>
+    </div>
+    <div class="story" data-draw="Two screens: a black one with C:\> (CLI) and a colourful one with icons (GUI).">
+      <p>There are two ways to talk to a computer. The old way is the <b>CLI</b>, the <b>Command Line Interface</b>, where you type every instruction. It's powerful but hard to learn.</p>
+      <p>The new way is the <b>GUI</b>, the <b>Graphical User Interface</b>, with icons, windows and a mouse. Windows made the GUI normal for everyone — but programmers still use command lines like <b>PowerShell</b> today.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-lilac">
+    <h2>The spark ⚡ <span class="year">1975</span></h2>
+    <div class="row">
+      <figure class="pic"><img src="img/popelec.jpg" alt="Popular Electronics January 1975 cover"><div class="fallback">📰</div><figcaption>The magazine cover they saw</figcaption></figure>
+      <figure class="pic"><img src="img/altair.jpg" alt="Altair 8800"><div class="fallback">🖥️</div><figcaption>Altair 8800 – no screen, no keyboard!</figcaption></figure>
+    </div>
+    <p class="mid">Paul Allen saw this magazine. He and Bill Gates wrote a <b>BASIC</b> programming language for the Altair — Microsoft's <b>first product</b>.</p>
+    <div class="story" data-draw="A magazine cover and a box-shaped computer covered in switches and lights.">
+      <p>Now, the history. It begins with a <b>magazine</b>. In January 1975, Paul Allen saw a computer called the <b>Altair 8800</b> on the cover of <i>Popular Electronics</i>. It had <b>no screen and no keyboard</b> — just switches and blinking lights!</p>
+      <p>He rushed to his friend Bill Gates, and together they wrote a programming language called <b>BASIC</b> for it. That became Microsoft's very <b>first product</b>.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-mint">
+    <h2>The founders 👨‍💻👨‍💻</h2>
+    <div class="row" style="flex-wrap:nowrap">
+      <figure class="pic sm"><img src="img/gates.jpg" alt="Bill Gates"><div class="fallback">🧑</div><figcaption>Bill Gates</figcaption></figure>
+      <figure class="pic sm"><img src="img/allen.jpg" alt="Paul Allen"><div class="fallback">🧑</div><figcaption>Paul Allen (1953–2018)</figcaption></figure>
+      <ul class="list small">
+        <li>🏫 Met at Lakeside School, Seattle</li>
+        <li>📅 Founded Microsoft on <b>4 April 1975</b></li>
+        <li>🔤 <b>Micro</b>computer + <b>Soft</b>ware</li>
+        <li>🌲 Headquarters: Redmond, Washington</li>
+        <li>🎯 Dream: “a computer on every desk and in every home”</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="Two friends and a desk with a computer. Write the dream: “A computer on every desk and in every home”.">
+      <p>Bill Gates and Paul Allen had met at <b>Lakeside School</b> in Seattle. On <b>4 April 1975</b> they founded <b>Microsoft</b> — from <b>micro</b>computer <b>soft</b>ware.</p>
+      <p>At a time when computers were giant machines owned by big companies, they had a bold dream: <b>“a computer on every desk and in every home.”</b> Windows is the reason that dream came true.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-peach">
+    <h2>The deal that changed everything 🤝 <span class="year">1981</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/ibmpc.png" alt="IBM Personal Computer"><div class="fallback">🖥️</div><figcaption>IBM PC (1981)</figcaption></figure>
+      <ul class="list mid txt">
+        <li>🏢 IBM needed an OS for its new Personal Computer</li>
+        <li>🛒 Microsoft bought a system called <b>86-DOS</b> and improved it into <b>MS-DOS</b></li>
+        <li>🧠 Smart move: Microsoft kept the right to sell DOS to <b>other</b> companies too</li>
+        <li>📈 Soon almost every PC in the world ran Microsoft software</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="A big beige IBM computer and a handshake.">
+      <p>In <b>1981</b>, the giant company <b>IBM</b> was building its first <b>Personal Computer</b> and needed an operating system. Microsoft bought a system called <b>86-DOS</b>, improved it, and named it <b>MS-DOS</b>.</p>
+      <p>Here was the clever part: Microsoft kept the right to sell DOS to <b>other</b> computer makers too. Soon almost every PC in the world was running Microsoft software.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sky">
+    <h2>Who invented windows & mouse? 🖱️</h2>
+    <div class="row">
+      <figure class="pic"><img src="img/alto.jpg" alt="Xerox Alto"><div class="fallback">🖥️</div><figcaption>Xerox Alto (1973) – Xerox PARC lab</figcaption></figure>
+      <figure class="pic"><img src="img/mac.jpg" alt="Apple Macintosh"><div class="fallback">🍎</div><figcaption>Apple Macintosh (1984)</figcaption></figure>
+    </div>
+    <p class="mid">The <span class="hl">WIMP</span> idea: <b>W</b>indows, <b>I</b>cons, <b>M</b>enus, <b>P</b>ointer — invented at Xerox, made famous by Apple, spread worldwide by Microsoft.</p>
+    <div class="story" data-draw="Write WIMP vertically: Windows, Icons, Menus, Pointer.">
+      <p>But DOS was still a black screen. The idea of a friendly screen came from a research lab called <b>Xerox PARC</b>, whose <b>Alto</b> computer of 1973 had windows and a mouse.</p>
+      <p>This idea is called <b>WIMP</b> — <b>W</b>indows, <b>I</b>cons, <b>M</b>enus and <b>P</b>ointer. Apple made it famous with the <b>Macintosh</b> in 1984, and Microsoft spread it to the whole world.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-peach">
+    <h2>Windows 1.0 <span class="year">1985</span></h2>
+    <div class="row">
+      <figure class="pic"><img src="img/gates_tandy.jpg" alt="Bill Gates with Windows 1.0"><div class="fallback">🧑‍💻</div><figcaption>Bill Gates demos Windows (1984)</figcaption></figure>
+      <ul class="list mid">
+        <li>🧱 Not a full OS yet — it ran <b>on top of MS-DOS</b></li>
+        <li>🔲 <b>Tiled</b> windows: no overlapping</li>
+        <li>⏰ Announced in 1983 but arrived 2 years late</li>
+        <li>🎨 Came with Paint, Notepad, Calculator & Clock</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="A DOS box at the bottom with a Windows box sitting on top of it.">
+      <p>On <b>20 November 1985</b>, <b>Windows 1.0</b> arrived — two years later than promised. It wasn't a complete operating system yet; it was a program that ran <b>on top of MS-DOS</b>.</p>
+      <p>Its windows were <b>tiled</b> — they couldn't overlap. But it came with <b>Paint, Notepad and Calculator</b>, and believe it or not, all three are still in Windows 11 today!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-lilac">
+    <h2>Windows 2.0 & the Apple lawsuit ⚖️ <span class="year">1987</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/win2.png" alt="Windows 2.0"><div class="fallback">🖥️</div><figcaption>Windows 2.0 – overlapping windows</figcaption></figure>
+      <ul class="list mid txt">
+        <li>🗂️ Windows could finally <b>overlap</b></li>
+        <li>⚖️ 1988: Apple <b>sued</b> Microsoft, saying Windows copied the Mac's “look and feel”</li>
+        <li>🏛️ After years in court, Microsoft <b>won</b> (1994)</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="Overlapping boxes and a judge's hammer with “Apple vs Microsoft”.">
+      <p><b>Windows 2.0</b>, in <b>1987</b>, finally let windows <b>overlap</b>. That's when trouble began.</p>
+      <p>In 1988, <b>Apple sued Microsoft</b>, saying Windows copied the “look and feel” of the Mac. The case went on for six years, and in <b>1994</b> the courts sided with Microsoft. It was one of the most famous tech battles ever.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sun">
+    <h2>Windows 3.0 & 3.1 — the first big hit 🎯 <span class="year">1990</span></h2>
+    <div class="row">
+      <figure class="pic"><img src="img/win3.png" alt="Windows 3.0"><div class="fallback">🖥️</div><figcaption>Program Manager</figcaption></figure>
+      <figure class="pic"><img src="img/floppy.jpg" alt="Floppy disks"><div class="fallback">💾</div><figcaption>Windows 3.11 setup: 9 floppy disks</figcaption></figure>
+    </div>
+    <ul class="list small" style="flex-direction:row;flex-wrap:wrap;justify-content:center">
+      <li>💰 Sold <b>millions</b> of copies</li>
+      <li>🔤 3.1 added <b>TrueType</b> fonts</li>
+      <li>🃏 <b>Solitaire</b> taught dragging · 💣 <b>Minesweeper</b> taught right-click</li>
+    </ul>
+    <div class="story" data-draw="A stack of floppy disks, a playing card and a little mine/bomb.">
+      <p><b>Windows 3.0</b> in <b>1990</b> was the first <b>huge hit</b>, selling millions of copies. It was installed from a stack of <b>floppy disks</b> — Windows 3.11 needed nine!</p>
+      <p>And the games had a secret purpose. <b>Solitaire</b> trained people to <b>drag</b> with the mouse, and <b>Minesweeper</b> trained them to <b>left-click and right-click</b>. Training disguised as fun!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-mint">
+    <h2>Two Windows families 🌳🌳</h2>
+    <div class="fam">
+      <span class="lbl">🏠 Home family<br><small>(built on DOS)</small></span>
+      <div class="chips"><span class="chip">95</span><span class="arrow">→</span><span class="chip">98</span><span class="arrow">→</span><span class="chip">ME (2000)</span><span class="arrow">↘</span></div>
+      <span class="lbl">🏢 Business family<br><small>(NT = “New Technology”)</small></span>
+      <div class="chips"><span class="chip">NT 3.1 (1993)</span><span class="arrow">→</span><span class="chip">NT 4.0</span><span class="arrow">→</span><span class="chip">2000</span><span class="arrow">→</span><span class="chip x">XP (2001) unites both!</span></div>
+    </div>
+    <ul class="list mid" style="width:min(1150px,92vw)">
+      <li>🏠 Home family: great for games, but <b>crashed often</b></li>
+      <li>🏢 NT family: a brand-new <b>kernel</b> (team led by Dave Cutler) — stable and secure</li>
+      <li>🔀 Since XP, every Windows (7, 10, 11…) is built on the <b>NT kernel</b></li>
+    </ul>
+    <div class="story" data-draw="Two family trees: Home (95, 98, ME) and Business (NT, 2000), joining into XP.">
+      <p>Here's a secret most people don't know: for years there were <b>two Windows families</b>. The <b>home family</b> — 95, 98 and ME — was built on old DOS. It was fun but <b>crashed often</b>.</p>
+      <p>The <b>business family</b> was called <b>NT</b>, for “New Technology”. A team led by <b>Dave Cutler</b> built a brand-new, strong <b>kernel</b> for it. In 2001, <b>XP</b> joined both families — and every Windows since then, including 11, runs on the NT kernel.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sky">
+    <h2>Windows 95 — a pop-culture event 🎉 <span class="year">1995</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/win95.png" alt="Windows 95"><div class="fallback">🖥️</div><figcaption>Windows 95</figcaption></figure>
+      <ul class="list mid txt">
+        <li>▶️ <b>Start</b> button + <b>taskbar</b> introduced</li>
+        <li>📛 Long file names: up to 255 letters (DOS allowed only 8!)</li>
+        <li>🔌 <b>Plug and Play</b>: connect a device and it just works</li>
+        <li>🎸 Launched with the song “Start Me Up” · people queued at midnight</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="A Start button and a file name: “my_holiday_photos.jpg” next to “MYHOLI~1.JPG”.">
+      <p><b>Windows 95</b> wasn't just software — it was an <b>event</b>. Its advert used the rock song <b>“Start Me Up”</b>, and people queued at <b>midnight</b> to buy it.</p>
+      <p>It introduced the <b>Start button</b> and <b>taskbar</b>, <b>Plug and Play</b> so new devices just worked, and <b>long file names</b> — up to 255 characters, when DOS allowed only 8!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-peach">
+    <h2>Windows 98 & the internet 🌐 <span class="year">1998</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/win98.png" alt="Windows 98"><div class="fallback">🖥️</div><figcaption>Windows 98</figcaption></figure>
+      <ul class="list mid txt">
+        <li>🌐 <b>Internet Explorer</b> built right into Windows</li>
+        <li>⚖️ The US government said Microsoft used its <b>monopoly</b> unfairly to beat other browsers</li>
+        <li>📜 This famous <b>antitrust case</b> (1998–2001) ended in a settlement with new rules for Microsoft</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="A globe, a computer and a courthouse.">
+      <p>Then the <b>internet</b> exploded. <b>Windows 98</b> came with <b>Internet Explorer</b> built in — so most people never installed another browser.</p>
+      <p>The <b>US government</b> said Microsoft was using its <b>monopoly</b> — being almost the only choice — to unfairly crush competitors. This <b>antitrust case</b> lasted from 1998 to 2001 and ended with new rules Microsoft had to follow.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-xp">
+    <h2>Windows XP <span class="year">2001</span></h2>
+    <div class="row">
+      <figure class="pic"><img src="img/bliss.png" alt="Bliss"><div class="fallback">🌄</div><figcaption>“Bliss” by Charles O'Rear, Sonoma County, 1996</figcaption></figure>
+      <figure class="pic"><img src="img/winxp.png" alt="Windows XP"><div class="fallback">🖥️</div><figcaption>The colourful “Luna” theme</figcaption></figure>
+    </div>
+    <ul class="list small" style="flex-direction:row;flex-wrap:wrap;justify-content:center">
+      <li>⚙️ First <b>home</b> Windows on the strong NT kernel</li>
+      <li>📸 Bliss: possibly the most-viewed photo ever</li>
+      <li>🗓️ Supported until <b>2014</b> — almost 13 years!</li>
+    </ul>
+    <div class="story" data-draw="The Bliss green hill. Write: Charles O'Rear, 1996, California.">
+      <p><b>Windows XP</b>, in <b>2001</b>, brought the strong <b>NT kernel</b> to home users at last. Its colourful theme was called <b>Luna</b>.</p>
+      <p>Its wallpaper, <b>“Bliss”</b>, is a real photo taken by <b>Charles O'Rear</b> in California in 1996 — possibly the <b>most-viewed photograph in history</b>. XP was so popular that Microsoft supported it until <b>2014</b>, almost 13 years.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-night">
+    <h2>A security wake-up call 🛡️ <span class="year" style="background:#fff;color:#000">2004</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/seccenter.png" alt="Windows Security Center"><div class="fallback">🛡️</div><figcaption>Windows Security Center (XP SP2)</figcaption></figure>
+      <ul class="list mid txt">
+        <li>🐛 Internet <b>worms</b> (like “Blaster”, 2003) spread to millions of PCs</li>
+        <li>🧱 XP Service Pack 2 turned the <b>firewall</b> on by default</li>
+        <li>🔄 Microsoft started fixing bugs every month: <b>Patch Tuesday</b></li>
+      </ul>
+    </div>
+    <div class="story" data-draw="A worm, a brick wall (firewall) and a calendar with “Tuesday” circled.">
+      <p>But being connected brought danger. In 2003, a <b>worm</b> called <b>Blaster</b> spread across millions of computers through the internet.</p>
+      <p>Microsoft fought back. <b>Service Pack 2</b> for XP turned on a <b>firewall</b> — a wall that blocks attacks — and added the <b>Security Center</b>. Microsoft also began releasing fixes every month on <b>Patch Tuesday</b>, which still happens today.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-lilac">
+    <h2>Windows Vista <span class="year">2007</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/vista.png" alt="Windows Vista"><div class="fallback">🖥️</div><figcaption>The “Aero” glass look</figcaption></figure>
+      <ul class="list mid txt">
+        <li>✨ <b>Aero</b>: see-through glass windows</li>
+        <li>🛑 <b>UAC</b> (User Account Control) asked permission before changes — safer but annoying</li>
+        <li>🐢 Needed powerful hardware → slow on many PCs</li>
+        <li>📖 Lesson: <span class="hl">speed matters as much as looks</span></li>
+      </ul>
+    </div>
+    <div class="story" data-draw="A glass window and a pop-up box asking “Allow? Yes / No”.">
+      <p><b>Windows Vista</b>, in <b>2007</b>, looked stunning, with see-through glass windows called <b>Aero</b>. It was also safer, thanks to <b>UAC</b> — pop-ups that ask permission before a program makes changes.</p>
+      <p>But it needed <b>powerful hardware</b> and ran slowly on many computers. People were frustrated. The lesson: <b>speed matters as much as looks</b>.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-mint">
+    <h2>Windows 7 <span class="year">2009</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/win7.png" alt="Windows 7"><div class="fallback">🖥️</div><figcaption>Windows 7</figcaption></figure>
+      <ul class="list mid txt">
+        <li>🔧 Built on Vista but <b>faster</b> and lighter</li>
+        <li>📌 New taskbar: <b>pin</b> apps, hover to preview windows</li>
+        <li>🧲 <b>Snap</b>: drag a window to the edge to fill half the screen</li>
+        <li>❤️ One of the most-loved Windows ever</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="A screen split in two halves with two windows snapped side by side.">
+      <p>Microsoft learned its lesson. <b>Windows 7</b>, in <b>2009</b>, was built on Vista but made <b>faster and lighter</b>.</p>
+      <p>It added <b>pinning</b> apps to the taskbar and <b>Snap</b> — drag a window to the edge and it fills half the screen. It became one of the <b>most-loved</b> versions ever.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-peach">
+    <h2>Windows 8 — a bold gamble 🎲 <span class="year">2012</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/win8.png" alt="Windows 8 Start screen"><div class="fallback">🖥️</div><figcaption>The full-screen tile Start screen</figcaption></figure>
+      <ul class="list mid txt">
+        <li>📱 Tablets and phones were booming → Windows redesigned for <b>touch</b></li>
+        <li>🟦 Live tiles replaced the Start menu</li>
+        <li>😠 Mouse-and-keyboard users were confused</li>
+        <li>🔙 8.1 (2013) brought the Start button back</li>
+        <li>📖 Lesson: <span class="hl">listen to your users</span></li>
+      </ul>
+    </div>
+    <div class="story" data-draw="A screen of colourful tiles with a finger touching one.">
+      <p>Then smartphones and tablets took over the world. Microsoft took a <b>bold gamble</b>: <b>Windows 8</b>, in <b>2012</b>, was redesigned for <b>touch screens</b>, with big live tiles — and <b>no Start button</b>.</p>
+      <p>People using a mouse and keyboard were confused and upset. A year later, <b>Windows 8.1</b> brought the Start button back. The lesson: <b>always listen to your users</b>.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sky">
+    <h2>Windows 10 <span class="year">2015</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/win10.png" alt="Windows 10"><div class="fallback">🖥️</div><figcaption>Windows 10</figcaption></figure>
+      <ul class="list mid txt">
+        <li>🔢 Skipped “9” to show a big leap forward</li>
+        <li>🎁 <b>Free</b> upgrade for Windows 7 & 8.1 users (first year)</li>
+        <li>🔄 <b>“Windows as a Service”</b>: improves through regular updates instead of new boxed versions</li>
+        <li>🌅 Support ended <b>14 October 2025</b></li>
+      </ul>
+    </div>
+    <div class="story" data-draw="Numbers 7, 8, (9 crossed out), 10, and a circular “update” arrow.">
+      <p><b>Windows 10</b> arrived in <b>2015</b> — and yes, Microsoft <b>skipped 9</b> to show it was a big leap. It was a <b>free upgrade</b> for Windows 7 and 8.1 users for its first year.</p>
+      <p>It changed how Windows is made: <b>“Windows as a Service”</b>. Instead of buying a new version every few years, it kept improving through <b>updates</b> over the internet. Its support ended on <b>14 October 2025</b>.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sun">
+    <h2>How is Windows built and tested? 🏗️</h2>
+    <div class="cards">
+      <div class="card"><div class="huge-emoji">👩‍💻</div><p>Thousands</p><small>of engineers work on it</small></div>
+      <div class="card"><div class="huge-emoji">📜</div><p>Tens of millions</p><small>of lines of code</small></div>
+      <div class="card"><div class="huge-emoji">🧪</div><p>Windows Insiders</p><small>millions of volunteers test early versions (since 2014)</small></div>
+      <div class="card"><div class="huge-emoji">📅</div><p>Patch Tuesday</p><small>fixes every month, on the 2nd Tuesday</small></div>
+    </div>
+    <p class="mid">Every feature is tested before it reaches <b>over a billion</b> computers.</p>
+    <div class="story" data-draw="A big stack of paper labelled “code”, and people with magnifying glasses testing.">
+      <p>How do you build something used by a billion people? Windows is written by <b>thousands of engineers</b>, and its code has <b>tens of millions of lines</b> — if you printed it, the pile of paper would be taller than a building!</p>
+      <p>Since 2014, <b>millions of volunteers</b> called <b>Windows Insiders</b> test new features early and report bugs. Then fixes reach everyone on <b>Patch Tuesday</b>, the second Tuesday of every month.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-lilac">
+    <h2>Windows 11 <span class="year">2021</span></h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/win11.png" alt="Windows 11"><div class="fallback">🖥️</div><figcaption>Windows 11</figcaption></figure>
+      <ul class="list mid txt">
+        <li>🎯 Centred Start menu, rounded corners</li>
+        <li>🔐 Needs a security chip called <b>TPM 2.0</b> — some older PCs can't upgrade</li>
+        <li>🧩 <b>Snap layouts</b> to arrange windows neatly</li>
+        <li>🤖 <b>Copilot</b>: a built-in AI assistant</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="A centred Start button and a small chip labelled “TPM 2.0”.">
+      <p><b>Windows 11</b> came in <b>2021</b> with a fresh look — a <b>centred Start menu</b> and rounded corners — plus <b>Snap layouts</b> to arrange windows neatly.</p>
+      <p>It needs a security chip called <b>TPM 2.0</b>, which protects passwords and keys, so some older computers can't upgrade. And it includes <b>Copilot</b>, an AI assistant built right in.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-title hard">
+    <h2>The future: AI & the cloud ☁️🤖</h2>
+    <div class="cards c3">
+      <div class="card"><div class="huge-emoji">🧠</div><p>AI chips (NPU)</p><small>“Copilot+ PCs” (2024) have a special chip just for AI</small></div>
+      <div class="card"><div class="huge-emoji">☁️</div><p>Cloud PC</p><small>Windows 365 streams a whole Windows computer over the internet</small></div>
+      <div class="card"><div class="huge-emoji">🗣️</div><p>Talk to your PC</p><small>ask Copilot in plain words instead of clicking menus</small></div>
+    </div>
+    <p class="big">From typing commands ⌨️ → clicking 🖱️ → touching 👆 → <b>talking</b> 🗣️</p>
+    <div class="story" data-draw="A timeline of hands: keyboard → mouse → finger → speech bubble.">
+      <p>What comes next? Some new computers, called <b>Copilot+ PCs</b>, have a special chip — an <b>NPU</b> — made just for <b>artificial intelligence</b>.</p>
+      <p>With <b>Windows 365</b>, you can even stream a whole Windows computer from the <b>cloud</b>. Look at the pattern: first we <b>typed</b>, then we <b>clicked</b>, then we <b>touched</b> — and now we are starting to simply <b>talk</b> to our computers.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sun">
+    <h2>32-bit vs 64-bit 🔢</h2>
+    <p class="mid">The “bits” decide how many memory addresses the computer can count.</p>
+    <div class="bits">
+      <div class="mid"><b>32-bit</b>: 2<sup>32</sup> ≈ 4.3 billion addresses → max <b>4 GB</b> of RAM</div>
+      <div class="bar32">4 GB</div>
+      <div class="mid"><b>64-bit</b>: 2<sup>64</sup> ≈ 18 billion billion addresses → <b>16 exabytes</b> in theory</div>
+      <div class="bar64">16,000,000,000 GB … (the bar would go to the Moon! 🌙)</div>
+    </div>
+    <p class="small">Windows 11 is <b>64-bit only</b>. Today's laptops often have 8–32 GB of RAM — impossible with 32-bit.</p>
+    <div class="story" data-draw="A tiny bar labelled 4 GB and a very long bar labelled 16 exabytes.">
+      <p>Now some computer maths! Memory is like a street of houses, and every house needs an <b>address</b>. A <b>32-bit</b> computer can count 2 to the power 32 addresses — about <b>4.3 billion</b> — so it can use only <b>4 GB</b> of RAM.</p>
+      <p>A <b>64-bit</b> computer can count 2 to the power 64 — about <b>18 billion billion</b> addresses! That's why Windows 11 is <b>64-bit only</b>, and laptops today can have 16 or 32 GB of RAM.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-mint">
+    <h2>Files, folders & paths 📂</h2>
+    <div class="split">
+      <div class="tree">💽 C:\
+ └─ 📁 Users
+     └─ 📁 Priya
+         ├─ 📁 Documents
+         │   └─ 📄 homework.docx
+         ├─ 📁 Pictures
+         │   └─ 🖼️ trip.jpg
+         └─ 📁 Music</div>
+      <div class="txt" style="display:flex;flex-direction:column;gap:2vh">
+        <p class="mid">A <b>path</b> is a file's full address:</p>
+        <span class="path">C:\Users\Priya\Documents\homework.docx</span>
+        <table class="t2" style="width:100%">
+          <tr><th>Extension</th><th>Type</th></tr>
+          <tr><td>.docx</td><td>📄 Word document</td></tr>
+          <tr><td>.jpg / .png</td><td>🖼️ Picture</td></tr>
+          <tr><td>.mp4</td><td>🎬 Video</td></tr>
+          <tr><td>.exe</td><td>⚙️ Program (be careful!)</td></tr>
+        </table>
+        <p class="small">Windows stores files using the <b>NTFS</b> file system.</p>
+      </div>
+    </div>
+    <div class="story" data-draw="A folder tree: C:\ → Users → (your name) → Documents → homework.docx">
+      <p>How does Windows find a file among millions? It uses <b>folders inside folders</b>, like a tree. Every file has a <b>path</b> — its full address — like <b>C:\Users\(my name)\Documents\homework.docx</b>.</p>
+      <p>The letters after the dot are the <b>extension</b>: <b>.docx</b> is a document, <b>.jpg</b> a picture, <b>.mp4</b> a video and <b>.exe</b> a program — be careful with those! Windows stores all this using the <b>NTFS</b> file system.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sky">
+    <h2>Peek inside: Task Manager 🔍</h2>
+    <div class="split">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:1vh;flex:1">
+        <img src="img/taskmgr.png" alt="Task Manager icon" style="width:clamp(60px,7vw,100px)">
+        <table class="t2" style="width:100%">
+          <tr><th>Process</th><th>CPU</th><th>Memory</th></tr>
+          <tr><td>🌐 Chrome</td><td>12%</td><td>850 MB</td></tr>
+          <tr><td>🎮 Minecraft</td><td>35%</td><td>1,900 MB</td></tr>
+          <tr><td>🎨 Paint</td><td>1%</td><td>60 MB</td></tr>
+          <tr><td>⊞ Windows Explorer</td><td>2%</td><td>110 MB</td></tr>
+        </table>
+        <span class="small">(example numbers)</span>
+      </div>
+      <ul class="list mid txt">
+        <li>⌨️ Open it: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Esc</kbd></li>
+        <li>📋 <b>Processes</b>: every program that is running</li>
+        <li>⚡ <b>CPU %</b>: how hard the processor is working</li>
+        <li>🧠 <b>Memory</b>: how much RAM each app uses</li>
+        <li>🛑 “End task” closes a frozen app</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="A table with 3 columns: Process, CPU, Memory — fill in Chrome, Minecraft, Paint.">
+      <p>Want to see the operating system at work? Press <b>Ctrl + Shift + Esc</b> to open <b>Task Manager</b>.</p>
+      <p>It lists every running program, called a <b>process</b>, how hard the <b>CPU</b> is working, and how much <b>memory</b> each app uses. If an app freezes, you can click <b>End task</b> to close it.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-bsod">
+    <h2 style="color:#fff">The famous “Blue Screen of Death” 😵</h2>
+    <div class="split">
+      <figure class="pic side"><img src="img/bsod.png" alt="Windows 8 blue screen"><div class="fallback">:(</div><figcaption>Windows 8 / 10 style</figcaption></figure>
+      <ul class="list mid txt">
+        <li>🛑 Shown when the system hits a <b>serious error</b> it can't safely recover from</li>
+        <li>🛡️ It stops everything <b>on purpose</b>, to protect your files</li>
+        <li>🙁 Since Windows 8 it shows a sad face <b>:(</b></li>
+        <li>⬛ In 2025, Windows 11 changed it to a simpler <b>black</b> screen</li>
+      </ul>
+    </div>
+    <div class="story" data-draw="A blue rectangle with a big sad face :( in it.">
+      <p>Sometimes things go very wrong. When Windows hits an error it <b>cannot safely fix</b>, it shows the famous <b>Blue Screen of Death</b>.</p>
+      <p>It sounds scary, but it actually stops everything <b>on purpose</b> to <b>protect your files</b> from damage. Since Windows 8 it shows a sad face <b>:(</b> — and in 2025, Windows 11 changed it to a simpler <b>black</b> screen.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-peach">
+    <h2>Staying safe on Windows 🛡️</h2>
+    <div class="cards c5">
+      <div class="card"><div class="huge-emoji">🔄</div><p>Update</p><small>updates fix security holes</small></div>
+      <div class="card"><div class="huge-emoji">🦠</div><p>Antivirus</p><small>Windows Security is built in</small></div>
+      <div class="card"><div class="huge-emoji">🔑</div><p>Strong passwords</p><small>long, mixed, never shared</small></div>
+      <div class="card"><div class="huge-emoji">📧</div><p>Think before clicking</p><small>unknown links & .exe files</small></div>
+      <div class="card"><div class="huge-emoji">☁️</div><p>Backup</p><small>keep copies of important files</small></div>
+    </div>
+    <p class="mid">💡 Ask a grown-up before installing anything new!</p>
+    <div class="story" data-draw="A shield with 5 points around it: Update, Antivirus, Password, Think, Backup.">
+      <p>So how do <b>we</b> stay safe? Five simple rules. One: always install <b>updates</b> — they fix security holes. Two: keep <b>Windows Security</b>, the built-in antivirus, switched on.</p>
+      <p>Three: use <b>strong passwords</b> and never share them. Four: <b>think before clicking</b> unknown links or .exe files. And five: <b>back up</b> important files. And of course — ask a grown-up before installing anything!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-lilac">
+    <h2>Windows and other operating systems 🌍</h2>
+    <table class="t2">
+      <tr><th>OS</th><th>Made by</th><th>Found on</th><th>Special thing</th></tr>
+      <tr><td>⊞ <b>Windows</b></td><td>Microsoft</td><td>Most laptops & desktops (≈ 7 in 10)</td><td>Runs on PCs from many brands</td></tr>
+      <tr><td>🍎 macOS</td><td>Apple</td><td>Mac computers</td><td>Only on Apple's own hardware</td></tr>
+      <tr><td>🐧 Linux</td><td>Linus Torvalds (1991) + volunteers</td><td>Servers, supercomputers</td><td>Free and open source</td></tr>
+      <tr><td>🌐 ChromeOS</td><td>Google</td><td>Chromebooks in schools</td><td>Works mostly in the browser</td></tr>
+      <tr><td>📱 Android / iOS</td><td>Google / Apple</td><td>Phones & tablets</td><td>Made for touch</td></tr>
+    </table>
+    <div class="story" data-draw="A table with 5 OS names and their logos: Windows, apple, penguin, Chrome circle, phone.">
+      <p>Windows isn't alone. <b>macOS</b> by Apple runs only on Mac computers. <b>Linux</b>, started by <b>Linus Torvalds</b> in 1991, is <b>free and open source</b> and runs most of the world's servers and supercomputers.</p>
+      <p><b>ChromeOS</b> powers Chromebooks, and phones use <b>Android</b> or <b>iOS</b>. But on laptops and desktops, Windows is the leader — about <b>7 out of 10</b>.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-mint">
+    <h2>Windows is hiding everywhere! 👀</h2>
+    <div class="cards c6">
+      <div class="card"><div class="huge-emoji">🏧</div><p>ATMs</p><small>many cash machines run Windows</small></div>
+      <div class="card"><div class="huge-emoji">✈️</div><p>Airports</p><small>flight boards & check-in kiosks</small></div>
+      <div class="card"><div class="huge-emoji">🛒</div><p>Shops</p><small>billing counters</small></div>
+      <div class="card"><div class="huge-emoji">🏥</div><p>Hospitals</p><small>scanners and records</small></div>
+      <div class="card"><div class="huge-emoji">🎮</div><p>Xbox</p><small>its system is based on Windows</small></div>
+      <div class="card"><div class="huge-emoji">🏭</div><p>Factories</p><small>machines & control screens</small></div>
+    </div>
+    <div class="story" data-draw="6 small pictures: ATM, aeroplane, shopping cart, hospital, game controller, factory.">
+      <p>Windows isn't only on laptops. Next time you're out, look carefully! Many <b>ATMs</b>, <b>airport flight boards</b>, <b>shop billing counters</b> and <b>hospital machines</b> run Windows.</p>
+      <p>Even the <b>Xbox</b> game console runs a system based on Windows. Sometimes you can spot it when one of these screens shows an error message!</p>
+    </div>
+  </section>
+
+  <section class="slide bg-sun">
+    <h2>40 years of Windows 📈</h2>
+    <div class="timeline">
+      <div class="t"><img src="img/win1.png" alt=""><span class="yr">1985</span><b>1.0</b></div>
+      <div class="t"><img src="img/win2.png" alt=""><span class="yr">1987</span><b>2.0</b></div>
+      <div class="t"><img src="img/win3.png" alt=""><span class="yr">1990</span><b>3.0</b></div>
+      <div class="t"><img src="img/win95.png" alt=""><span class="yr">1995</span><b>95</b></div>
+      <div class="t"><img src="img/win98.png" alt=""><span class="yr">1998</span><b>98</b></div>
+      <div class="t"><img src="img/winxp.png" alt=""><span class="yr">2001</span><b>XP</b></div>
+      <div class="t"><img src="img/vista.png" alt=""><span class="yr">2007</span><b>Vista</b></div>
+      <div class="t"><img src="img/win7.png" alt=""><span class="yr">2009</span><b>7</b></div>
+      <div class="t"><img src="img/win8.png" alt=""><span class="yr">2012</span><b>8</b></div>
+      <div class="t"><img src="img/win10.png" alt=""><span class="yr">2015</span><b>10</b></div>
+      <div class="t"><img src="img/win11.png" alt=""><span class="yr">2021</span><b>11</b></div>
+    </div>
+    <div class="line"></div>
+    <p class="mid">From a program on top of DOS 👉 to an AI-powered OS on <b>over a billion</b> devices</p>
+    <div class="story" data-draw="A long timeline: 1985 1.0, 1987 2.0, 1990 3.0, 1995 95, 1998 98, 2001 XP, 2007 Vista, 2009 7, 2012 8, 2015 10, 2021 11.">
+      <p>Let's look back at the whole journey. From <b>Windows 1.0</b> in 1985 — a simple program on top of DOS — through the hits like <b>95, XP and 7</b>, and the lessons of <b>Vista and 8</b>.</p>
+      <p>All the way to <b>Windows 11</b> today: an AI-powered operating system on <b>more than a billion</b> devices. Every version, good or bad, taught Microsoft something.</p>
+    </div>
+  </section>
+
+  <section class="slide bg-title hard">
+    <h2>Quiz for experts 🧠🔥</h2>
+    <div class="quiz">
+      <div class="q">1. What is the core part of an OS called?<div class="a">✅ The kernel</div></div>
+      <div class="q">2. Why can a 32-bit Windows use only about 4 GB of RAM?<div class="a">✅ 2³² ≈ 4.3 billion addresses = 4 GB</div></div>
+      <div class="q">3. Which two Windows families joined in XP?<div class="a">✅ The DOS-based home family (95/98/ME) and the NT business family</div></div>
+      <div class="q">4. What does WIMP stand for?<div class="a">✅ Windows, Icons, Menus, Pointer</div></div>
+      <div class="q">5. Which shortcut opens Task Manager?<div class="a">✅ Ctrl + Shift + Esc</div></div>
+    </div>
+    <h2>Thank you! 🙏 Any questions? 🙋</h2>
+    <div class="story" data-draw="A brain with a question mark, and a big “Thank you!”.">
+      <p>Now let's test the experts in the room!</p>
+      <p>1. What is the core part of an OS called? <i>(The kernel)</i><br>2. Why can 32-bit Windows use only about 4 GB of RAM? <i>(2³² ≈ 4.3 billion addresses)</i><br>3. Which two families joined in XP? <i>(The DOS-based home family and the NT family)</i><br>4. What does WIMP stand for? <i>(Windows, Icons, Menus, Pointer)</i><br>5. Which shortcut opens Task Manager? <i>(Ctrl + Shift + Esc)</i></p>
+      <p>Two friends had a dream of a computer on every desk — and they made it real. Maybe one of us will build the next big idea. <b>Thank you for listening! Any questions?</b></p>
+    </div>
+  </section>
+</div>
+
+<div class="bar">
+  <button id="prev">◀ Back</button>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+    <div class="dots" id="dots"></div>
+    <span class="hint"><span id="count"></span> · ← → keys · S = story script · F = full screen</span>
+  </div>
+  <button id="next">Next ▶</button>
+</div>
+
+<script>
+  const decks={}; document.querySelectorAll('.deck').forEach(d=>decks[d.dataset.level]=d);
+  const dots=document.getElementById('dots'), count=document.getElementById('count'), storyEl=document.getElementById('story');
+  const NAMES={easy:'🟢 Easy',medium:'🟡 Medium',hard:'🔴 Hard'};
+  let level='easy', i=0, slides=[], storyOn=false;
+  const store=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}, load=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+
+  function buildStory(){
+    const pages=slides.map((s,k)=>{
+      const h=s.querySelector('h1,h2'), st=s.querySelector('.story');
+      const title=h?h.innerText.replace(/\s+/g,' ').trim():'Page '+(k+1);
+      const img=s.querySelector('.pic img, .split img, .timeline img');
+      const thumb=(img||st&&st.dataset.draw)?`<div class="thumb">${img?`<img src="${img.getAttribute('src')}" alt="">`:''}${st&&st.dataset.draw?`<div class="draw">🎨 <b>Draw:</b> ${st.dataset.draw}</div>`:''}</div>`:'';
+      return `<article class="page"><span class="pno">${k+1}</span><button class="go" data-k="${k}">see slide ▶</button>
+        <h3>${title}</h3><div class="body">${thumb}<div class="say"><span class="lbl">🗣️ Say</span>${st?st.innerHTML:''}</div></div></article>`;
+    }).join('');
+    storyEl.innerHTML=`<div class="sb-wrap">
+      <div class="sb-head"><h1>📖 Story-teller script · ${NAMES[level]} (${slides.length} pages)</h1>
+        <p>Copy one notebook page for each page below: write the <b>heading</b>, make the small <b>drawing</b>, then write the <b>“Say”</b> part. Tomorrow, tell it like a story — you don't need to read word-for-word.</p>
+        <div class="tips"><span>❓ Start with a question</span><span>👀 Look at your friends</span><span>🐢 Speak slowly</span><span>🖐️ Show your drawings</span><span>😊 Smile!</span></div>
+      </div>${pages}</div>`;
+    storyEl.querySelectorAll('.go').forEach(b=>b.onclick=()=>{setStory(false);go(+b.dataset.k)});
+  }
+  function setStory(on){
+    storyOn=on; document.body.classList.toggle('storymode',on); store('winStory',on?'1':'0');
+    document.getElementById('storyBtn').textContent=on?'🖼️ Back to slides':'📖 Story teller';
+    if(on){buildStory();storyEl.scrollTop=0}
+  }
+  function setLevel(l,n=0){
+    level=decks[l]?l:'easy';
+    Object.entries(decks).forEach(([k,d])=>d.classList.toggle('on',k===level));
+    document.querySelectorAll('#levels button[data-l]').forEach(b=>b.classList.toggle('on',b.dataset.l===level));
+    slides=[...decks[level].querySelectorAll('.slide')];
+    dots.innerHTML='';
+    slides.forEach((_,k)=>{const d=document.createElement('i');d.onclick=()=>go(k);dots.appendChild(d)});
+    store('winLevel',level);
+    go(n); if(storyOn)buildStory();
+  }
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+    [...dots.children].forEach((d,k)=>d.classList.toggle('on',k===i));
+    count.textContent=`Page ${i+1} of ${slides.length}`;
+    history.replaceState(null,'',`#${level}-${i+1}`);
+  }
+  document.querySelectorAll('#levels button[data-l]').forEach(b=>b.onclick=()=>setLevel(b.dataset.l));
+  document.getElementById('storyBtn').onclick=()=>setStory(!storyOn);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  document.getElementById('next').onclick=()=>go(i+1);
+  addEventListener('keydown',e=>{
+    if(e.key==='s'||e.key==='S')setStory(!storyOn);
+    if(storyOn)return;
+    if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();go(i+1)}
+    if(['ArrowLeft','PageUp'].includes(e.key))go(i-1);
+    if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}
+  });
+  document.querySelectorAll('.slide .q').forEach(q=>q.onclick=()=>q.classList.toggle('open'));
+  document.querySelectorAll('.pic img').forEach(img=>{
+    const mark=()=>img.closest('.pic').classList.add('broken');
+    img.addEventListener('error',mark); if(img.complete&&!img.naturalWidth)mark();
+  });
+  const wantStory=/-story$/.test(location.hash);
+  const m=location.hash.match(/^#(easy|medium|hard)-(\d+)/);
+  m?setLevel(m[1],parseInt(m[2])-1):setLevel(load('winLevel')||'easy');
+  if(load('winStory')==='1'||wantStory)setStory(true);
+</script>
+</body>
+</html>
